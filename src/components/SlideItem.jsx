@@ -4,9 +4,6 @@ import React from 'react'
 export default function SlideItem({ item }) {
 
     const { width } = useWindowDimensions();
-    // let [fonts] = useFonts({
-    //     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
-    // });
 
     return (
         <View style={[styles.container, { width }]}>

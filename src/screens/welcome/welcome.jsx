@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Image, Pressable } from 'react-native';
 import CustomButton from '../../components/CustomButton';
-import { images } from '../../constants/images.js';
 import logo from '../../assets/images/logo.png';
 
 const Welcome = ({ navigation }) => {

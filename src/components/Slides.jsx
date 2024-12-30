@@ -2,9 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, FlatList, StyleSheet, Text, StatusBar, Pressable, Dimensions, Animated } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import SlidesData from '../constants/SlidesData';
-import { Linking } from 'react-native';
 import SlideItem from './SlideItem';
-const { width } = Dimensions.get('window');
 
 const Slides = ({ navigation }) => {
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -112,12 +110,6 @@ const styles = StyleSheet.create({
         width: 10,
         borderRadius: 5,
         marginHorizontal: 3,
-    },
-    backButton: {
-        backgroundColor: '#303036',
-        borderRadius: 50,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
     },
     nextButton: {
         backgroundColor: '#CDFEEC',
