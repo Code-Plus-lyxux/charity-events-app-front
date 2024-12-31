@@ -21,7 +21,7 @@ const Slides = ({ navigation }) => {
                 setCurrentSlideIndex(nextIndex);
                 flatListRef.current.scrollToIndex({ index: nextIndex, animated: true });
             } else {
-                navigation.navigate(''); 
+                navigation.navigate('Login'); 
             }
         };
     

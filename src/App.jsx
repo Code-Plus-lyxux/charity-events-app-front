@@ -9,15 +9,20 @@ import Login from './screens/auth/Login';
 import ResetPassword from './screens/auth/Reset_password';
 import SignUp from './screens/auth/Sign_up';
 import ForgotPassword from './screens/auth/Forgot_password';
+import ProfilePage from './screens/profile/Profile_page'
 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+
+  const isTesting = true; // Set this to true for testing purposes
+  const testScreen = 'ForgotPassword'
+
   return (
     <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Welcome"
+          initialRouteName={isTesting ? testScreen : "Welcome"}
           screenOptions={{ headerShown: false }} 
         >
         <Stack.Screen 
@@ -49,6 +54,11 @@ const App = () => {
                 name="SignUp" 
                 component={SignUp} 
         />
+        <Stack.Screen 
+                name="ProfilePage" 
+                component={ProfilePage} 
+        />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,10 +1,10 @@
 import React,{ useState } from 'react';
 import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TouchableOpacity,TextInput,Pressable} from 'react-native';
-import BackArrowIcon from '../../assets/images/back_arrow_icon.png';
 import EyeIcon from '../../assets/images/eye_icon.png';
 import LockIcon from '../../assets/images/lock_icon.png';
 import EyeOffIcon from '../../assets/images/hide_password.png';
 import CheckIcon from '../../assets/images/check_icon.png';
+import BackArrowButton from '../../components/BackArrowButton';
 
 
 const Reset_password = ({ navigation }) => {
@@ -18,15 +18,7 @@ const Reset_password = ({ navigation }) => {
     return (
             <SafeAreaView>
                 <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%',backgroundColor: 'white' }}>
-                    <View >
-                        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                            <Image
-                                source={BackArrowIcon}
-                                style={styles.BackIcon}
-                                resizeMode="contain"
-                            />
-                        </TouchableOpacity>
-                    </View> 
+                    <BackArrowButton ReturnPage="ForgotPassword"/>
                     <View style={styles.container}>
                         <View style={styles.container}>
                             <Text style={styles.TitleText}>Reset Your Password</Text>
@@ -99,12 +91,12 @@ const Reset_password = ({ navigation }) => {
                         </View>
                         
                         
-                        <Pressable style={styles.Confirm_Button} onPress={() => navigation.navigate('ResetPassword')}>
+                        <TouchableOpacity style={styles.Confirm_Button} onPress={() => navigation.navigate('ResetPassword')}>
                                 <Text style={styles.buttonTextConfirm}>CONFIRM</Text>
-                        </Pressable>
-                        <Pressable style={styles.Cancel_Button} onPress={() => navigation.navigate('Login')}>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.Cancel_Button} onPress={() => navigation.navigate('Login')}>
                                 <Text style={styles.buttonTextCancel}>CANCEL</Text>
-                        </Pressable>
+                        </TouchableOpacity>
 
 
                     </View>
