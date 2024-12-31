@@ -1,5 +1,5 @@
 import React,{ useState } from 'react';
-import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable} from 'react-native';
+import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,TouchableOpacity,Pressable} from 'react-native';
 import Logo from '../../assets/images/givewell_logo.png';
 import EyeIcon from '../../assets/images/eye_icon.png';
 import EmailIcon from '../../assets/images/email_icon.png';
@@ -107,9 +107,9 @@ const Sign_up = ({ navigation }) => {
                         </Pressable>     
                     </View>
                   
-                    <Pressable style={styles.Sign_Up_Button}>
+                    <TouchableOpacity style={styles.Sign_Up_Button}>
                             <Text style={styles.buttonTextLogin}>SIGN UP</Text>
-                    </Pressable>
+                    </TouchableOpacity>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                         <View style={{ flex: 1, height: .7,marginLeft: 10, backgroundColor: '#000' }} />
@@ -117,13 +117,13 @@ const Sign_up = ({ navigation }) => {
                         <View style={{ flex: 1, height: .7, marginRight: 10, backgroundColor: '#000' }} />
                     </View>
 
-                    <Pressable style={styles.Google_Sign_In_Button}>
+                    <TouchableOpacity style={styles.Google_Sign_In_Button}>
                             <Image
                                 source={GoogleIcon}
                                 style={styles.icon}
                             />
                             <Text style={styles.buttonTextGoogle}>Sign in with Google</Text>
-                    </Pressable>
+                    </TouchableOpacity>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.have_account}>Already have an account ? </Text>

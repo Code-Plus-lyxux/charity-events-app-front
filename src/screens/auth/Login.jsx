@@ -1,5 +1,5 @@
 import React,{ useState } from 'react';
-import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable} from 'react-native';
+import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable,TouchableOpacity} from 'react-native';
 import Logo from '../../assets/images/givewell_logo.png';
 import EyeIcon from '../../assets/images/eye_icon.png';
 import EmailIcon from '../../assets/images/email_icon.png';
@@ -71,9 +71,9 @@ const Login = ({ navigation }) => {
                     </View>
                     <Text style={styles.forgot_password} onPress={() => navigation.navigate('ForgotPassword')} >Forgot Password?</Text>
                     
-                    <Pressable style={styles.Login_Button}>
+                    <TouchableOpacity style={styles.Login_Button}>
                             <Text style={styles.buttonTextLogin}>LOGIN</Text>
-                    </Pressable>
+                    </TouchableOpacity>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                         <View style={{ flex: 1, height: .7,marginLeft: 10, backgroundColor: '#000' }} />
@@ -81,13 +81,13 @@ const Login = ({ navigation }) => {
                         <View style={{ flex: 1, height: .7, marginRight: 10, backgroundColor: '#000' }} />
                     </View>
 
-                    <Pressable style={styles.Google_Sign_In_Button}>
+                    <TouchableOpacity style={styles.Google_Sign_In_Button}>
                             <Image
                                 source={GoogleIcon}
                                 style={styles.icon}
                             />
                             <Text style={styles.buttonTextGoogle}>Sign in with Google</Text>
-                    </Pressable>
+                    </TouchableOpacity>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.no_account}>Don’t have an account ? </Text>
