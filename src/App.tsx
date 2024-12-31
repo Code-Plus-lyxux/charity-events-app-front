@@ -10,6 +10,7 @@ import ResetPassword from './screens/auth/Reset_password';
 import SignUp from './screens/auth/Sign_up';
 import ForgotPassword from './screens/auth/Forgot_password';
 import Home from './screens/(tabs)/home';
+import MyEvents from './screens/(tabs)/MyEvents';
 
 
 const Stack = createNativeStackNavigator();
@@ -53,6 +54,10 @@ const App = () => {
         <Stack.Screen 
                 name="Home" 
                 component={Home}
+        />
+        <Stack.Screen 
+                name="MyEvents" 
+                component={MyEvents}
         />
       </Stack.Navigator>
     </NavigationContainer>
