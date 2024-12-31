@@ -9,6 +9,8 @@ import Login from './screens/auth/Login';
 import ResetPassword from './screens/auth/Reset_password';
 import SignUp from './screens/auth/Sign_up';
 import ForgotPassword from './screens/auth/Forgot_password';
+import Home from './screens/(tabs)/home';
+import MyEvents from './screens/(tabs)/MyEvents';
 import ProfilePage from './screens/profile/Profile_page'
 
 
@@ -55,10 +57,16 @@ const App = () => {
                 component={SignUp} 
         />
         <Stack.Screen 
+                name="Home" 
+                component={Home}
+        />
+        <Stack.Screen 
+                name="MyEvents" 
+                component={MyEvents}
+        />
                 name="ProfilePage" 
                 component={ProfilePage} 
         />
-        
       </Stack.Navigator>
     </NavigationContainer>
   );
