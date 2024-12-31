@@ -11,15 +11,20 @@ import SignUp from './screens/auth/Sign_up';
 import ForgotPassword from './screens/auth/Forgot_password';
 import Home from './screens/(tabs)/home';
 import MyEvents from './screens/(tabs)/MyEvents';
+import ProfilePage from './screens/profile/Profile_page'
 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+
+  const isTesting = true; // Set this to true for testing purposes
+  const testScreen = 'ForgotPassword'
+
   return (
     <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Welcome"
+          initialRouteName={isTesting ? testScreen : "Welcome"}
           screenOptions={{ headerShown: false }} 
         >
         <Stack.Screen 
@@ -58,6 +63,9 @@ const App = () => {
         <Stack.Screen 
                 name="MyEvents" 
                 component={MyEvents}
+        />
+                name="ProfilePage" 
+                component={ProfilePage} 
         />
       </Stack.Navigator>
     </NavigationContainer>
