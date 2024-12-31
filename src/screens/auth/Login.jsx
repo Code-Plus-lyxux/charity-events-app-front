@@ -1,6 +1,6 @@
 import React,{ useState } from 'react';
 import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable} from 'react-native';
-import Logo from '../../assets/images/logo.png';
+import Logo from '../../assets/images/givewell_logo.png';
 import EyeIcon from '../../assets/images/eye_icon.png';
 import EmailIcon from '../../assets/images/email_icon.png';
 import LockIcon from '../../assets/images/lock_icon.png';
