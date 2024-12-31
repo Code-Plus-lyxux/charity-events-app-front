@@ -21,7 +21,8 @@ const Slides = ({ navigation }) => {
                 setCurrentSlideIndex(nextIndex);
                 flatListRef.current.scrollToIndex({ index: nextIndex, animated: true });
             } else {
-                navigation.navigate(''); 
+                navigation.navigate('Home');
+                console.log('Navigating to Home');
             }
         };
     
@@ -54,7 +55,7 @@ const Slides = ({ navigation }) => {
         return (
             <View style={{ width: '100%', height: '10%', justifyContent: "center", alignItems: "flex-end", padding: 20, backgroundColor: 'white' }}>
                 {currentSlideIndex < SlidesData.length - 1 && (
-                    <Pressable onPress={() => { navigation.navigate('Login') }} style={styles.skipButton}>
+                    <Pressable onPress={() => { navigation.navigate('Home') }} style={styles.skipButton}>
                         <Text style={styles.skipText}>Skip</Text>
                     </Pressable>
                 )}
