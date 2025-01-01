@@ -5,9 +5,10 @@ import icons from '../constants/icons';
 const EventCard = ({ event }) => {
   return (
     <View style={styles.card}>
+      <View>
       <Pressable onPress={() => console.log('Event Pressed')} style={styles.container}>
 
-        <Text style={styles.title}>{event.title}</Text>
+        <Text style={styles.title} numberOfLines={2}>{event.title}</Text>
 
         <View style={styles.locationDateContainer}>
 
@@ -25,18 +26,20 @@ const EventCard = ({ event }) => {
         <View style={styles.imageContainer}>
           <Image source={event.image} style={styles.image} resizeMode="cover" />
           <View style={styles.handContainer}>
-          <Pressable onPress={() => console.log('Register Pressed')}>
-            <Image
-              style={styles.icon}
-              source={icons.Hand}
-              resizeMode="contain"
-            />
-          </Pressable>
-        </View>
+            <Pressable onPress={() => console.log('Register Pressed')}>
+              <Image
+                style={styles.icon}
+                source={icons.Hand}
+                resizeMode="contain"
+              />
+            </Pressable>
+          </View>
         </View>
 
-        <Text style={styles.description}>{event.description}</Text>
+        <Text style={styles.description} numberOfLines={2}
+          ellipsizeMode="tail">{event.description}</Text>
       </Pressable>
+      </View>
     </View>
   );
 };
@@ -46,17 +49,21 @@ export default EventCard;
 const styles = StyleSheet.create({
   card: {
     width: '95%',
-    marginBottom: 30,
+    height: 300,
+    marginBottom: 20,
+    marginTop: 10,
     backgroundColor: '#fff',
     borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 6,
     padding: 20,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    overflow: 'hidden',
+
   },
   container: {
     display: 'flex',
@@ -74,6 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 10,
+    gap: -5,
   },
   locationContainer: {
     flexDirection: 'row',
@@ -90,6 +98,8 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 10,
     color: '#888',
+    flexShrink: 1,
+    flexGrow: 1,
   },
   imageContainer: {
     width: 308,
@@ -112,8 +122,8 @@ const styles = StyleSheet.create({
   },
   handContainer: {
     position: 'absolute',
-    top: 10, 
-    right: 10, 
+    top: 10,
+    right: 10,
     zIndex: 10,
   }
 });
