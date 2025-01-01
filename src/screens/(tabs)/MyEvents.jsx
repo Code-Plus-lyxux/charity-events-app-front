@@ -4,7 +4,7 @@ import EventCard from '../../components/EventCard';
 import Hero from '../../assets/images/event-cover.png';
 import EventFilters from '../../components/EventFilters';
 
-const MyEvents = () => {
+const MyEvents = ({navigation}) => {
     const [filteredEvents, setFilteredEvents] = useState([]);
     const [activeFilter, setActiveFilter] = useState('Hosting');
 
@@ -93,7 +93,7 @@ const MyEvents = () => {
                 }}
             >
                 <Text style={{ fontSize: 18, fontWeight: 'bold' }}>My Events</Text>
-                <Pressable onPress={''}>
+                <Pressable onPress={() => navigation.navigate('AddEvent')}>
                     <Text style={{ color: '#00554A', fontWeight: 'bold', fontSize: 16 }}>
                         Add Event +
                     </Text>

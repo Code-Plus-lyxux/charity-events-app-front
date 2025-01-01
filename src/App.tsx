@@ -12,14 +12,15 @@ import ForgotPassword from './screens/auth/Forgot_password';
 import Home from './screens/(tabs)/home';
 import MyEvents from './screens/(tabs)/MyEvents';
 import ProfilePage from './screens/profile/Profile_page'
+import AddEvent from './screens/add_event/Add_event'
 
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
 
-  const isTesting = true; // Set this to true for testing purposes
-  const testScreen = 'ForgotPassword'
+  const isTesting = false; // Set this to true for testing purposes
+  const testScreen = 'AddEvent'
 
   return (
     <NavigationContainer>
@@ -64,8 +65,13 @@ const App = () => {
                 name="MyEvents" 
                 component={MyEvents}
         />
+        <Stack.Screen 
                 name="ProfilePage" 
                 component={ProfilePage} 
+        />
+        <Stack.Screen 
+                name="AddEvent" 
+                component={AddEvent} 
         />
       </Stack.Navigator>
     </NavigationContainer>
