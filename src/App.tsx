@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image } from 'react-native';
 import icons from './constants/icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // Import screens
 import Welcome from './screens/welcome/welcome';
 import Onboarding from './screens/welcome/onboarding';
@@ -15,7 +16,8 @@ import MyEvents from './screens/tabs/MyEvents';
 import ProfilePage from './screens/profile/Profile_page'
 import AddEvent from './screens/add_event/Add_event'
 import UserProfile from './screens/tabs/UserProfile';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import EventPage from './screens/event_page/Event_page';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -56,8 +58,8 @@ const TabNavigator = () => {
 
 const App = () => {
 
-        const isTesting = false; // Set this to true for testing purposes
-        const testScreen = 'Tabs'; // Set this to the screen you want to test
+        const isTesting = true; // Set this to true for testing purposes
+        const testScreen = 'EventPage'; // Set this to the screen you want to test
 
         return (
                 <NavigationContainer>
@@ -113,6 +115,10 @@ const App = () => {
                                 <Stack.Screen
                                         name="AddEvent"
                                         component={AddEvent}
+                                />
+                                <Stack.Screen
+                                        name="EventPage"
+                                        component={EventPage}
                                 />
                         </Stack.Navigator>
                 </NavigationContainer>

@@ -1,8 +1,6 @@
 import React,{ useState,useEffect } from 'react';
 import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable,TouchableOpacity,Modal,Animated,FlatList,TouchableWithoutFeedback} from 'react-native';
 import BackArrowIcon from '../../assets/images/back_arrow_icon_2.png';
-import GalleryImportIcon from '../../assets/images/gallery-import.png';
-import CalenderIcon from '../../assets/images/calendar.png';
 import SearchNormalIcon from '../../assets/images/search-normal.png';
 import SearchPressedIcon from '../../assets/images/search-pressed.png';
 import { EventDetail } from '../../components/EventDetail';
