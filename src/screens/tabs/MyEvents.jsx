@@ -5,7 +5,7 @@ import EventFilters from '../../components/EventFilters';
 import events from '../../constants/events';
 import { parse, isAfter, isBefore, isSameDay } from 'date-fns';
 
-const MyEvents = () => {
+const MyEvents = ({navigation}) => {
     const [filteredEvents, setFilteredEvents] = useState([]);
     const [activeFilter, setActiveFilter] = useState('Hosting');
 
@@ -51,7 +51,7 @@ const MyEvents = () => {
                 }}
             >
                 <Text style={{ fontSize: 18, fontWeight: 'bold' }}>My Events</Text>
-                <Pressable onPress={''}>
+                <Pressable onPress={() => navigation.navigate('AddEvent')}>
                     <Text style={{ color: '#00554A', fontWeight: 'bold', fontSize: 16 }}>
                         Add Event +
                     </Text>

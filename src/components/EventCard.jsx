@@ -1,44 +1,50 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import React from 'react';
+import React, { useState } from 'react';
 import icons from '../constants/icons';
 
 const EventCard = ({ event }) => {
+  const [isHandBold, setIsHandBold] = useState(false);
+
+  const toggleHandIcon = () => {
+    setIsHandBold((prev) => !prev); 
+  };
+
   return (
     <View style={styles.card}>
       <View>
-      <Pressable onPress={() => console.log('Event Pressed')} style={styles.container}>
+        <Pressable onPress={() => console.log('Event Pressed')} style={styles.container}>
 
-        <Text style={styles.title} numberOfLines={2}>{event.title}</Text>
+          <Text style={styles.title} numberOfLines={2}>{event.title}</Text>
 
-        <View style={styles.locationDateContainer}>
+          <View style={styles.locationDateContainer}>
 
-          <View style={styles.locationContainer}>
-            <Image source={icons.LocationIcon} style={styles.icon} />
-            <Text style={styles.location}>{event.location}</Text>
+            <View style={styles.locationContainer}>
+              <Image source={icons.LocationIcon} style={styles.icon} />
+              <Text style={styles.location}>{event.location}</Text>
+            </View>
+
+            <View style={styles.dateContainer}>
+              <Image source={icons.DateIcon} style={styles.icon} />
+              <Text style={styles.date}>{event.date}</Text>
+            </View>
           </View>
 
-          <View style={styles.dateContainer}>
-            <Image source={icons.DateIcon} style={styles.icon} />
-            <Text style={styles.date}>{event.date}</Text>
+          <View style={styles.imageContainer}>
+            <Image source={event.image} style={styles.image} resizeMode="cover" />
+            <View style={styles.handContainer}>
+              <Pressable onPress={toggleHandIcon}>
+                <Image
+                  style={styles.icon}
+                  source={isHandBold ? icons.HandBold : icons.Hand} 
+                  resizeMode="contain"
+                />
+              </Pressable>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.imageContainer}>
-          <Image source={event.image} style={styles.image} resizeMode="cover" />
-          <View style={styles.handContainer}>
-            <Pressable onPress={() => console.log('Register Pressed')}>
-              <Image
-                style={styles.icon}
-                source={icons.Hand}
-                resizeMode="contain"
-              />
-            </Pressable>
-          </View>
-        </View>
-
-        <Text style={styles.description} numberOfLines={2}
-          ellipsizeMode="tail">{event.description}</Text>
-      </Pressable>
+          <Text style={styles.description} numberOfLines={2}
+            ellipsizeMode="tail">{event.description}</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -63,7 +69,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     overflow: 'hidden',
-
   },
   container: {
     display: 'flex',
