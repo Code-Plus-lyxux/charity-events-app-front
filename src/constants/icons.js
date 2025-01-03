@@ -7,5 +7,17 @@ import HandBlack from '../assets/icons/hand-black.png'
 import Home from '../assets/icons/home.png'
 import Calendar from '../assets/icons/calendar.png'
 import Profile from '../assets/icons/profile.png'
+import HandBold from '../assets/icons/hand-bold.png'
 
-export default { LocationIcon, DateIcon, Hand, SettingsIcon, GridBlack, HandBlack, Home, Calendar, Profile };
+export default {
+    LocationIcon,
+    DateIcon,
+    Hand, 
+    SettingsIcon, 
+    GridBlack,
+    HandBlack, 
+    Home, 
+    Calendar, 
+    Profile, 
+    HandBold,
+};

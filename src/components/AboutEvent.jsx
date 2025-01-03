@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     width: '95%',
     height: '100%',
-    maxHeight: 170,
+    maxHeight: 200,
     backgroundColor: '#fff',
     paddingHorizontal: 5,
     borderColor: 'rgba(0, 0, 0, 0.2)',

@@ -8,7 +8,7 @@ import events from '../../constants/events';
 const Home = ({ navigation }) => {
 
   const handleAddEvent = () => {
-    navigation.navigate('MyEvents');
+    navigation.navigate('EditEvent');
   };
 
   return (

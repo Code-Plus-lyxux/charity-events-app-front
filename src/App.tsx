@@ -17,7 +17,9 @@ import ProfilePage from './screens/profile/Profile_page'
 import AddEvent from './screens/add_event/Add_event'
 import UserProfile from './screens/tabs/UserProfile';
 import EventPage from './screens/event_page/Event_page';
+import EditEvent from './screens/edit_event/EditEvent';
 
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -59,7 +61,7 @@ const TabNavigator = () => {
 const App = () => {
 
         const isTesting = true; // Set this to true for testing purposes
-        const testScreen = 'EventPage'; // Set this to the screen you want to test
+        const testScreen = 'EventPage'; 
 
         return (
                 <NavigationContainer>
@@ -119,6 +121,10 @@ const App = () => {
                                 <Stack.Screen
                                         name="EventPage"
                                         component={EventPage}
+                                 />
+                                <Stack.Screen
+                                        name="EditEvent"
+                                        component={EditEvent}
                                 />
                         </Stack.Navigator>
                 </NavigationContainer>
