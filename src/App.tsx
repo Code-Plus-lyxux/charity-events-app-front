@@ -19,7 +19,7 @@ import UserProfile from './screens/tabs/UserProfile';
 import EventPage from './screens/event_page/Event_page';
 import EditEvent from './screens/edit_event/EditEvent';
 
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

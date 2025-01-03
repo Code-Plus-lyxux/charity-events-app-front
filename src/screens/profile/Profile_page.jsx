@@ -5,6 +5,10 @@ import edit_icon from '../../assets/images/edit_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
 import close_icon from '../../assets/images/close_icon.png';
 import { ProfileDetail } from '../../components/ProfileDetail';
+import * as ImagePicker from 'react-native-image-picker';
+import ImageCropPicker from 'react-native-image-crop-picker';
+
+
 
 const Profile_page = ({ navigation }) => {
     const [name, setName] = useState('Lucifer Barret');
@@ -15,6 +19,7 @@ const Profile_page = ({ navigation }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentDetail, setCurrentDetail] = useState({ property: '', value: '' });
     const [newValue, setNewValue] = useState('');
+    const [imageUri, setImageUri] = useState(null);// Set default image
 
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
@@ -65,14 +70,31 @@ const Profile_page = ({ navigation }) => {
         }
     }, [isModalVisible]);
 
+    // Open Image Gallery and Crop Image
+    const handleEditImage = () => {
+        ImageCropPicker.openPicker({
+            width: 300,
+            height: 400,
+            cropping: true,
+          }).then(image => {
+            setImageUri(image.path);
+          }).catch(error => {
+            console.log('ImagePicker Error: ', error);
+          });
+    };
+    
+
     return (
         <SafeAreaView>
             <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%', backgroundColor: 'white' }}>
                 <BackArrowButton ReturnPage="Login" />
                 <View style={styles.container}>
                     <Text style={styles.TitleText}>Profile</Text>
-                    <Image source={user_image} resizeMode="contain" style={styles.imageStyle} />
-                    <TouchableOpacity>
+                    <Image 
+                        source={imageUri ? { uri: imageUri } : user_image} 
+                        style={styles.circularImg} 
+                        />
+                    <TouchableOpacity onPress={handleEditImage}>
                         <Image source={edit_icon} resizeMode="contain" style={styles.iconStyle} />
                     </TouchableOpacity>
 
@@ -102,12 +124,10 @@ const Profile_page = ({ navigation }) => {
                                 { transform: [{ translateY: slideAnim }] }
                             ]}
                         >
-                            
                             <TouchableOpacity style={styles.headerContainer} onPress={() => setIsModalVisible(false)}>
                                 <Image source={close_icon} resizeMode="contain" style={styles.closeIconStyle} />
                             </TouchableOpacity>
-                            
-                            
+
                             <TextInput
                                 style={styles.modalInput}
                                 value={newValue}
@@ -220,6 +240,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 15,
     },
+    circularImg:{
+        width:180,
+        height:180,
+        borderRadius:90,
+        marginBottom:10,
+        marginTop:10
+    }
 });
 
 export default Profile_page;

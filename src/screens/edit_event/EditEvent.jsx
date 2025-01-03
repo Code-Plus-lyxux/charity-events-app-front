@@ -71,7 +71,7 @@ const EditEvent = ({ navigation }) => {
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%', paddingHorizontal: 26, }}>
-                <TouchableOpacity onPress={() => navigation.navigate('Tabs')}>
+                <TouchableOpacity onPress={() => navigation.navigate('EventPage')}>
                     <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
                 </TouchableOpacity>
                 <Text style={[styles.AddEventText]}>Edit Event</Text>
