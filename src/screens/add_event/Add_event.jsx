@@ -69,7 +69,7 @@ const Add_event = ({navigation}) => {
             <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%',backgroundColor: 'white' }}>
                 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%',marginBottom: '24',paddingHorizontal: 26,}}>
-                        <TouchableOpacity onPress={() => navigation.navigate('MyEvents')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Tabs')}>
                             <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
                         </TouchableOpacity>
                         <Text style={[styles.AddEventText]}>Add Event</Text>

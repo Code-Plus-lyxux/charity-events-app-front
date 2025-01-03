@@ -15,7 +15,7 @@ const UserProfile = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <Pressable onPress={() => navigation.navigate('Home')} style={styles.header}>
+            <Pressable onPress={() => navigation.navigate('ProfilePage')} style={styles.header}>
                 <View style={styles.header}>
                     <Image source={icons.SettingsIcon} />
                 </View>
