@@ -91,7 +91,7 @@ const Reset_password = ({ navigation }) => {
                         </View>
                         
                         
-                        <TouchableOpacity style={styles.Confirm_Button} onPress={() => navigation.navigate('ResetPassword')}>
+                        <TouchableOpacity style={styles.Confirm_Button} onPress={() => navigation.navigate('Login')}>
                                 <Text style={styles.buttonTextConfirm}>CONFIRM</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.Cancel_Button} onPress={() => navigation.navigate('Login')}>

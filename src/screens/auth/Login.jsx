@@ -69,9 +69,9 @@ const Login = ({ navigation }) => {
                             />
                         </Pressable>     
                     </View>
-                    <Text style={styles.forgot_password} onPress={() => navigation.navigate('ForgotPassword')} >Forgot Password?</Text>
+                    <Text style={styles.forgot_password} onPress={() => navigation.navigate('EmailVerification')} >Forgot Password?</Text>
                     
-                    <TouchableOpacity style={styles.Login_Button}>
+                    <TouchableOpacity style={styles.Login_Button} onPress={() => navigation.navigate('Tabs')} >
                             <Text style={styles.buttonTextLogin}>LOGIN</Text>
                     </TouchableOpacity>
 

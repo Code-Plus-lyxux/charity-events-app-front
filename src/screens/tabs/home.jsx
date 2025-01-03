@@ -33,7 +33,11 @@ const Home = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}>
           {(events).map((event, index) => (
-            <EventCard key={index} event={event} />
+            <EventCard 
+              key={index} 
+              event={event}
+              navigation={navigation}
+              />
           ))}
         </ScrollView>
 

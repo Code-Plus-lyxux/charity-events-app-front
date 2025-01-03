@@ -1,8 +1,10 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import React, { useState } from 'react';
 import icons from '../constants/icons';
+import { useNavigation } from '@react-navigation/native';
 
-const EventCard = ({ event }) => {
+const EventCard = (props) => {
+  const navigation = useNavigation();
   const [isHandBold, setIsHandBold] = useState(false);
 
   const toggleHandIcon = () => {
@@ -12,25 +14,25 @@ const EventCard = ({ event }) => {
   return (
     <View style={styles.card}>
       <View>
-        <Pressable onPress={() => console.log('Event Pressed')} style={styles.container}>
+        <Pressable onPress={() => navigation.navigate('EventPage')} style={styles.container}>
 
-          <Text style={styles.title} numberOfLines={2}>{event.title}</Text>
+          <Text style={styles.title} numberOfLines={2}>{props.event.title}</Text>
 
           <View style={styles.locationDateContainer}>
 
             <View style={styles.locationContainer}>
               <Image source={icons.LocationIcon} style={styles.icon} />
-              <Text style={styles.location}>{event.location}</Text>
+              <Text style={styles.location}>{props.event.location}</Text>
             </View>
 
             <View style={styles.dateContainer}>
               <Image source={icons.DateIcon} style={styles.icon} />
-              <Text style={styles.date}>{event.date}</Text>
+              <Text style={styles.date}>{props.event.date}</Text>
             </View>
           </View>
 
           <View style={styles.imageContainer}>
-            <Image source={event.image} style={styles.image} resizeMode="cover" />
+            <Image source={props.event.image} style={styles.image} resizeMode="cover" />
             <View style={styles.handContainer}>
               <Pressable onPress={toggleHandIcon}>
                 <Image
@@ -43,7 +45,7 @@ const EventCard = ({ event }) => {
           </View>
 
           <Text style={styles.description} numberOfLines={2}
-            ellipsizeMode="tail">{event.description}</Text>
+            ellipsizeMode="tail">{props.event.description}</Text>
         </Pressable>
       </View>
     </View>
