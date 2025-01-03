@@ -7,6 +7,7 @@ import LockIcon from '../../assets/images/lock_icon.png';
 import EyeOffIcon from '../../assets/images//hide_password.png';
 import GoogleIcon from '../../assets/images//google.png';
 import Line from '../../assets/images//Line1.png';
+import { loginUser } from '../../api/auth';
 
 
 
@@ -20,6 +21,32 @@ const Login = ({ navigation }) => {
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    };
+
+    const handleLogin = async () => {
+      if (!email || !password ) {
+                alert('Please fill out all fields');
+                return;
+              }
+            
+              if (!validateEmail(email)) {
+                alert('Invalid email address');
+                return;
+              }
+            
+              try {
+                const credentials = { email, password};
+                console.log(credentials);
+                const response = await loginUser(credentials); 
+                if (!response) {
+                    alert('Error logging in. Please try again');
+                    return;
+                }else{
+                navigation.navigate('Tabs');
+                }
+              } catch (error) {
+                console.error(error);
+              }
     };
 
     return (
@@ -69,9 +96,9 @@ const Login = ({ navigation }) => {
                             />
                         </Pressable>     
                     </View>
-                    <Text style={styles.forgot_password} onPress={() => navigation.navigate('ForgotPassword')} >Forgot Password?</Text>
+                    <Text style={styles.forgot_password} onPress={() => navigation.navigate('EmailVerification')} >Forgot Password?</Text>
                     
-                    <TouchableOpacity style={styles.Login_Button}>
+                    <TouchableOpacity style={styles.Login_Button} onPress={handleLogin} >
                             <Text style={styles.buttonTextLogin}>LOGIN</Text>
                     </TouchableOpacity>
 

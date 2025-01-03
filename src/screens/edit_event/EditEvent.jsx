@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.8, 
         shadowRadius: 6, 
         elevation: 1,
+        zIndex: 1,
     },
     
 });

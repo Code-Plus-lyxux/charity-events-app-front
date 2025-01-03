@@ -7,20 +7,55 @@ import LockIcon from '../../assets/images/lock_icon.png';
 import EyeOffIcon from '../../assets/images/hide_password.png';
 import GoogleIcon from '../../assets/images/google.png';
 import UserIcon from '../../assets/images/user_icon.png';
+import { registerUser } from '../../api/auth';
 
 const Sign_up = ({ navigation }) => {
   
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [fullname, setFullName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('Doe');
+    const [mobile, setMobile] = useState('1234567890');
+    const [profileImage, setProfileImage] = useState('');
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
+
     const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
     };
+
+    
+    const handleSignUp = async () => {
+        if (!firstName || !email || !password || !confirmPassword) {
+          alert('Please fill out all fields');
+          return;
+        }
+      
+        if (!validateEmail(email)) {
+          alert('Invalid email address');
+          return;
+        }
+      
+        if (password !== confirmPassword) {
+          alert('Passwords do not match');
+          return;
+        }
+      
+        try {
+          const userData = { firstName, lastName, email, password, mobile, profileImage };
+          console.log(userData);
+          const response = await registerUser(userData); 
+          console.log(response);
+          alert('Registration successful!');
+          navigation.navigate('Login');
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      
 
     return (
         <SafeAreaView>
@@ -57,8 +92,8 @@ const Sign_up = ({ navigation }) => {
                             style={styles.input}
                             placeholderTextColor="#888"
                             placeholder="Full Name"
-                            value={fullname}
-                            onChangeText={(text) => setFullName(text)}
+                            value={firstName}
+                            onChangeText={(text) => setFirstName(text)}
                             keyboardType="names"
                             autoCapitalize="none"
                         />
@@ -107,7 +142,7 @@ const Sign_up = ({ navigation }) => {
                         </Pressable>     
                     </View>
                   
-                    <TouchableOpacity style={styles.Sign_Up_Button}>
+                    <TouchableOpacity style={styles.Sign_Up_Button} onPress={handleSignUp}>
                             <Text style={styles.buttonTextLogin}>SIGN UP</Text>
                     </TouchableOpacity>
 

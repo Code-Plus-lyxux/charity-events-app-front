@@ -87,7 +87,7 @@ const Profile_page = ({ navigation }) => {
     return (
         <SafeAreaView>
             <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%', backgroundColor: 'white' }}>
-                <BackArrowButton ReturnPage="Login" />
+                <BackArrowButton ReturnPage="UserProfile" />
                 <View style={styles.container}>
                     <Text style={styles.TitleText}>Profile</Text>
                     <Image 

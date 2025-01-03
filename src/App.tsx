@@ -3,7 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image } from 'react-native';
 import icons from './constants/icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // Import screens
 import Welcome from './screens/welcome/welcome';
 import Onboarding from './screens/welcome/onboarding';
@@ -18,11 +17,22 @@ import AddEvent from './screens/add_event/Add_event'
 import UserProfile from './screens/tabs/UserProfile';
 import EventPage from './screens/event_page/Event_page';
 import EditEvent from './screens/edit_event/EditEvent';
+import EmailVerification from './screens/auth/EmailVerification';
 
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const UserProfileStack = () => {
+        return (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="UserProfile" component={UserProfile} />
+            <Stack.Screen name="ProfilePage" component={ProfilePage} />
+          </Stack.Navigator>
+        );
+      };
+      
 
 const TabNavigator = () => {
         return (
@@ -33,7 +43,7 @@ const TabNavigator = () => {
                                         let iconSource;
                                         if (route.name === 'Home') iconSource = icons.Home;
                                         if (route.name === 'MyEvents') iconSource = icons.Calendar;
-                                        if (route.name === 'UserProfile') iconSource = icons.Profile;
+                                        if (route.name === 'UserProfileStack') iconSource = icons.Profile;
 
                                         return (
                                                 <Image
@@ -53,7 +63,7 @@ const TabNavigator = () => {
                 >
                         <Tab.Screen name="Home" component={Home} />
                         <Tab.Screen name="MyEvents" component={MyEvents} />
-                        <Tab.Screen name="UserProfile" component={UserProfile} />
+                        <Tab.Screen name="UserProfileStack" component={UserProfileStack} />
                 </Tab.Navigator>
         );
 };
@@ -61,7 +71,7 @@ const TabNavigator = () => {
 const App = () => {
 
         const isTesting = true; // Set this to true for testing purposes
-        const testScreen = 'EventPage'; 
+        const testScreen = 'Login'; // Set this to the screen you want to test
 
         return (
                 <NavigationContainer>
@@ -99,10 +109,6 @@ const App = () => {
                                         component={SignUp}
                                 />
                                 <Stack.Screen
-                                        name="MyEvents"
-                                        component={MyEvents}
-                                />
-                                <Stack.Screen
                                         name="ProfilePage"
                                         component={ProfilePage}
                                 />
@@ -125,6 +131,10 @@ const App = () => {
                                 <Stack.Screen
                                         name="EditEvent"
                                         component={EditEvent}
+                                />
+                                <Stack.Screen
+                                        name="EmailVerification"
+                                        component={EmailVerification}
                                 />
                         </Stack.Navigator>
                 </NavigationContainer>

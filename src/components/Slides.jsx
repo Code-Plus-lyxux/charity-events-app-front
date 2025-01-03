@@ -54,7 +54,7 @@ const Slides = ({ navigation }) => {
         return (
             <View style={{ width: '100%', height: '10%', justifyContent: "center", alignItems: "flex-end", padding: 20, backgroundColor: 'white' }}>
                 {currentSlideIndex < SlidesData.length - 1 && (
-                    <Pressable onPress={() => {navigation.navigate('Tabs') }} style={styles.skipButton}>
+                    <Pressable onPress={() => {navigation.navigate('Login') }} style={styles.skipButton}>
                         <Text style={styles.skipText}>Skip</Text>
                     </Pressable>
                 )}
