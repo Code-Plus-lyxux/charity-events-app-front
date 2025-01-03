@@ -70,8 +70,8 @@ const TabNavigator = () => {
 
 const App = () => {
 
-        const isTesting = false; // Set this to true for testing purposes
-        const testScreen = 'EventPage'; // Set this to the screen you want to test
+        const isTesting = true; // Set this to true for testing purposes
+        const testScreen = 'Login'; // Set this to the screen you want to test
 
         return (
                 <NavigationContainer>
