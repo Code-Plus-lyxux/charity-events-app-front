@@ -12,36 +12,57 @@ import {
     TextInput,
     KeyboardAvoidingView,
     Platform,
-    Animated
+    Animated,
+    PanResponder
 } from 'react-native';
+import Comment from '../../components/Comment';
 import Event_Cover_Image from '../../assets/images/event-cover.png';
 import UserCountIcon from '../../assets/images/user_count_icon.png';
-import LocationIcon from '../../assets/images/location_icon.png';
-import CalenderIcon from '../../assets/images/calendar.png';
 import ShareIcon from '../../assets/images/export.png';
 import ImInIcon from '../../assets/images/im_in_icon.png';
 import CommentIcon from '../../assets/images/comment_icon.png';
+import DeleteIcon from '../../assets/images/trash_icon.png';
 import GalleryImportIcon from '../../assets/images/gallery-import-2.png';
 import EditIcon from '../../assets/images/edit_icon_2.png';
-
+import SendIcon from '../../assets/images/send_icon.png';
+import BackArrowButton2 from '../../assets/images/back_arrow_icon_3.png';
+import ProfileImage1 from '../../assets/images/comments/image1.png';
+import ProfileImage2 from '../../assets/images/comments/image2.png';
+import ProfileImage3 from '../../assets/images/comments/image3.png';
+import ProfileImage4 from '../../assets/images/comments/image4.png';
+import ProfileImage5 from '../../assets/images/comments/image5.png';
+import ProfileImage6 from '../../assets/images/comments/image6.png';
+import Media_tab from './Media_tab'
+import { launchImageLibrary } from 'react-native-image-picker';
+import Event_tab
+ from './Event_tab';
 const { height } = Dimensions.get('window');
 
-const Event_page = () => {
+const Event_page = ({navigation,route}) => {
     const [activeTab, setActiveTab] = useState('details');
     const [userCount] = useState('500');
-    const [eventHostedByUser, setEventHostedByUser] = useState(true);
+    const eventHostedByUser = route.params?.hostedByUser;;
     const [eventName] = useState('Support Animal Welfare: Spend a Day Volunteering at the Local Shelter and Make a Difference');
     const [dateTime] = useState('21 December 2024 at 9am to 4pm');
     const [location] = useState('Haven Paws Animal Shelter, Kandy');
     const [aboutEvent] = useState(
-        `Join us for a meaningful day at the local animal shelter in Kandy, where you’ll have the opportunity to support animal welfare by directly engaging with the animals in need. Spend time feeding, cleaning, and playing with the sheltered animals to help them feel loved and cared for. Your efforts will contribute to the overall well-being of the animals and help raise awareness about the importance of adoption.`
+        `Join us for a meaningful day at the local animal shelter in Kandy, where you’ll have the opportunity to support animal welfare by directly engaging with the animals in need. Spend time feeding, cleaning, and playing with the sheltered animals to help them feel loved and cared for. Your efforts will contribute to the overall well-being of the animals and help raise awareness about the importance of adoption.  Whether you're an animal enthusiast or someone looking to give back, this event will make a lasting impact on the lives of many animals. Together, we can make a real difference in the community and help create a brighter future for these deserving animals.
+
+        By volunteering, you'll also have the chance to connect with other like-minded individuals who share your passion for animal welfare. It's an excellent opportunity to learn more about the needs of animals in our community while making new friends and strengthening the bond we all share for a cause greater`
     );
 
     const [modalVisible, setModalVisible] = useState(false);
     const [comment, setComment] = useState('');
+    const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(4);
+    const [selectImage, setSelectImage] = useState(false);
 
         // Animated value for modal slide
         const slideAnim = useState(new Animated.Value(0))[0];
+
+        const handleSelectImage = (state) => {
+            setSelectImage(state);
+            console.log('Select Mode:', state ? 'Enabled' : 'Disabled');
+        };
     
     
         // Trigger slide-up animation when modal is shown
@@ -60,37 +81,82 @@ const Event_page = () => {
                 }).start();
             }
         }, [modalVisible]);
-
+    
 
     const renderTabContent = () => {
         if (activeTab === 'details') {
             return (
-                <View style={styles.detailsContainer}>
-                    <View style={{ flexDirection: 'row' }}>
-                        <Image source={CalenderIcon} resizeMode="cover" style={styles.event_details_icon} />
-                        <Text style={styles.detailText}>{dateTime}</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row' }}>
-                        <Image source={LocationIcon} resizeMode="cover" style={styles.event_details_icon} />
-                        <Text style={styles.detailText}>{location}</Text>
-                    </View>
+                <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
+                    <Event_tab dateTime={dateTime} location={location} aboutEvent={aboutEvent}/>
+                </ScrollView>
+        );
+        } else if (activeTab === 'media') {
+            return<Media_tab eventHostedByUser={eventHostedByUser} no_of_UploadedImages={no_of_UploadedImages} onSelectImage={handleSelectImage}/>;
+       
+        }
+        
+    };
 
-                    <Text style={styles.detailTitle}>About Event:</Text>
-                    <Text style={styles.detailText}>{aboutEvent}</Text>
+    const pickImage = () => {
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                includeBase64: false,
+            },
+            (response) => {
+                if (response.didCancel) {
+                    console.log('User cancelled image picker');
+                } else if (response.errorMessage) {
+                    console.log('ImagePicker Error: ', response.errorMessage);
+                } else {
+                    console.log(response.assets[0].uri);
+                    // Handle the selected image URI
+                }
+            }
+        );
+    };
+
+
+    const renderBottomBar = () => {
+        if (activeTab === 'media') {
+            return (
+                <View style={styles.bottomBar}>
+                    {!selectImage && eventHostedByUser &&(
+                        <TouchableOpacity style={styles.uploadButton1} onPress={pickImage}>
+                            <Text style={styles.uploadText}>Upload</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {selectImage && eventHostedByUser &&(
+                    <>
+                        <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
+                            <Text style={styles.uploadText}>Upload</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[styles.deleteButton, {color: '#DA4F4F',flexDirection:'row'}]} 
+                            onPress={''} 
+                        >
+                            <Text style={styles.deleteText}>Delete</Text>
+                            <Image source={DeleteIcon} style={styles.deleteIcon} />
+                        </TouchableOpacity>
+                    </>
+                    )}
                 </View>
             );
-        } else if (activeTab === 'media') {
+        } else {
             return (
-                <View style={styles.mediaContainer}>
-                    {eventHostedByUser ? (
-                        <>
-                            <Image source={GalleryImportIcon} style={[styles.commentIcon, { marginTop: '15%' }]} />
-                            <Text style={styles.detailTitle}>Upload Media</Text>
-                            <Text style={styles.mediaText}>Upload photos and videos here to share your amazing moments with others.</Text>
-                        </>
-                    ) : (
-                        <Text style={styles.mediaText}>Media content shared by others will appear here.</Text>
-                    )}
+                <View style={styles.bottomBar}>
+                    <TouchableOpacity style={styles.imInButton}>
+                        <Text style={styles.imInText}>I'm in!</Text>
+                        <Image source={ImInIcon} style={styles.imInIcon} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.shareButton}>
+                        <Text style={styles.shareText}>Share</Text>
+                        <Image source={ShareIcon} style={styles.shareIcon} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
+                        <Image source={CommentIcon} style={styles.commentIcon} />
+                    </TouchableOpacity>
                 </View>
             );
         }
@@ -98,15 +164,24 @@ const Event_page = () => {
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
+            
                 <View style={styles.container}>
                     <View style={styles.imageWrapper}>
+                        
                         <Image source={Event_Cover_Image} resizeMode="cover" style={styles.coverImage} />
                         <View style={styles.overlay} />
+                        <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.backIconWrapper}>
+                            <Image
+                                source={BackArrowButton2}
+                                style={styles.backArrowButton2}
+                                resizeMode="contain"
+                            />
+                        </TouchableOpacity>
+                        
                         {eventHostedByUser && (
                             <TouchableOpacity
                                 style={styles.editIconWrapper}
-                                onPress={() => console.log('Edit event')}
+                                onPress={() => navigation.navigate('EditEvent')} 
                             >
                                 <Image source={EditIcon} style={styles.editIcon} />
                             </TouchableOpacity>
@@ -133,44 +208,14 @@ const Event_page = () => {
                         </TouchableOpacity>
                     </View>
                     {renderTabContent()}
+                    {renderBottomBar()}
                 </View>
-            </ScrollView>
-            <View style={styles.bottomBar}>
-                {modalVisible ? (
-                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.commentInput}
-                                placeholder="Add a comment"
-                                placeholderTextColor="#575757"
-                                value={comment}
-                                onChangeText={setComment}
-                            />
-                            <TouchableOpacity onPress={() => console.log('Send comment', comment)}>
-                                <Text style={styles.sendIcon}>Send</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </KeyboardAvoidingView>
-                ) : (
-                    <>
-                        <TouchableOpacity style={styles.imInButton}>
-                            <Text style={styles.imInText}>I'm in!</Text>
-                            <Image source={ImInIcon} style={styles.imInIcon} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.shareButton}>
-                            <Text style={styles.shareText}>Share</Text>
-                            <Image source={ShareIcon} style={styles.shareIcon} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setModalVisible(true)}>
-                            <Image source={CommentIcon} style={styles.commentIcon} />
-                        </TouchableOpacity>
-                    </>
-                )}
-            </View>
+            
 
             <Modal
                 visible={modalVisible}
                 animationType="slide"
+                fullscreen={false}
                 transparent={true}
                 onRequestClose={() => setModalVisible(false)}
             >
@@ -179,12 +224,34 @@ const Event_page = () => {
                     style={[ styles.modalContent,{ transform: [{ translateY: slideAnim }] },]}
                     >
                 
-                    
-                        <ScrollView>
-                            {/* Display only the first comment */}
-                            <Text style={styles.commentText}>User1: Great app!</Text>
+                <View style={styles.horizontalLine} />
+                        <ScrollView style={{marginBottom:40,padding:5}}>
+                            
+                            <View style={{paddingRight:45}}>
+                                <Comment profileImage={ProfileImage1} name='Lucifer Barret' commentText='Such an amazing event! Excited to participate and contribute. Thank you for organizing this. Let’s make a positive impact together!'/>
+                                <Comment profileImage={ProfileImage2} name='Ayesha Perera' commentText='This event is such a wonderful initiative! Excited to participate, meet amazing people, and contribute to a meaningful cause. Let’s work together and make it truly impactful!'/>
+                                <Comment profileImage={ProfileImage3} name='Nuwan Silva' commentText='Looking forward to this! Great initiative for the community.'/>
+                                <Comment profileImage={ProfileImage4} name='Kavindi Jayasekara' commentText='Such a meaningful event! Excited to join and help create a positive impact for everyone involved'/>
+                                <Comment profileImage={ProfileImage5} name='Amal Fernando' commentText='Great initiative!'/>
+                                <Comment profileImage={ProfileImage6} name='Tharushi Gamage' commentText='This event is truly inspiring! Looking forward to participating and contributing to such a meaningful cause together.'/>
+                            </View>
                         </ScrollView>
-                    
+                        
+                        <View style={styles.bottomBar}>
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    style={styles.commentInput}
+                                    placeholder="Add a comment"
+                                    placeholderTextColor="#575757"
+                                    value={comment}
+                                    onChangeText={setComment}
+                                />
+                                <TouchableOpacity onPress={() => console.log('Send comment', comment)}>
+                                    <Image source={SendIcon} style={styles.sendIcon} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        
                 
                 </Animated.View>
                 </View>
@@ -194,8 +261,24 @@ const Event_page = () => {
 };
 
 const styles = StyleSheet.create({
+    horizontalLine: {   
+        height: 1.5,
+        backgroundColor: 'black',
+        width: '20%',
+        position: 'relative',
+        top: 0,
+        alignSelf:'center',
+        marginBottom:15
+    },
     container: {
         flex: 1,
+    },
+    backArrowButton2:{
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        width: 25,
+        height: 25,   
     },
     modalContainer: {
         position: 'absolute',
@@ -213,11 +296,11 @@ const styles = StyleSheet.create({
         bottom: -60,
         left: 0,
         right: 0,
-        
         backgroundColor: '#fff',
         width: '100%',
         height: '70%',
         padding: 20,
+        paddingTop:20,
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
         elevation: 0,
@@ -248,11 +331,6 @@ const styles = StyleSheet.create({
         left: '5%',
         width: '3%',
         height: '6%',
-    },
-    event_details_icon: {
-        width: '5%',
-        height: '60%',
-        marginRight: '2%',
     },
     imageWrapper: {
         position: 'relative',
@@ -335,34 +413,9 @@ const styles = StyleSheet.create({
         color: '#00B894',
         fontWeight: '600',
     },
-    detailsContainer: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-    },
-    detailTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginVertical: 5,
-    },
-    detailText: {
-        fontSize: 14,
-        color: 'gray',
-        marginBottom: 10,
-        textAlign: 'justify',
-    },
-    mediaContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    mediaText: {
-        paddingHorizontal: '15%',
-        fontSize: 14,
-        color: 'gray',
-        textAlign:'center'
-    },
     bottomBar: {
-        position: 'absolute', // Ensure it's fixed at the bottom
-        bottom: 0,  // Stick to the bottom
+        position: 'absolute', 
+        bottom: 0,  
         left: 0,
         right: 0,
         flexDirection: 'row',
@@ -373,7 +426,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#eee',
         elevation: 5,
-        zIndex: 20,  // Ensure it's above the modal
+        zIndex: 20,  
     },
     
     imInButton: {
@@ -424,7 +477,11 @@ const styles = StyleSheet.create({
         width: 30,
         height: 30,
     },
-    uploadButton: {
+    deleteIcon: {
+        width: 12,
+        height: 12,
+    },
+    uploadButton1: {
         backgroundColor: '#00B894',
         justifyContent: 'center',
         alignItems: 'center',
@@ -432,10 +489,32 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         width: '85%', 
     },
+    uploadButton2: {
+        backgroundColor: '#00B894',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 5,
+        borderRadius: 30,
+        width: '55%',
+        marginRight: '3%' 
+    },
+    deleteButton: {
+        backgroundColor: '#DA4F4F',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 5,
+        borderRadius: 30,
+        width: '25%', 
+    },
     uploadText: {
         color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    deleteText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '500',
     },
     editIcon: {
         position: 'absolute',
@@ -450,35 +529,37 @@ const styles = StyleSheet.create({
         right: 10,
         zIndex: 10,
     },
-
-
-    // Comment Input Wrapper styles
+    backIconWrapper: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        zIndex: 10,
+    },
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        paddingHorizontal: 10,
-        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        width: '90%',
+        height: '70%',
+        paddingHorizontal: 0,
+        backgroundColor: '#ffffff',
+        borderColor: 'rgba(87, 87, 87, 0.3)',
+        borderWidth:1,
         paddingVertical: 5,
-        borderRadius: 30,
-        marginHorizontal: 20,
-        elevation: 5, // shadow effect
-        zIndex: 25,
+        borderRadius: 30,       
+        zIndex: 0,
     },
     commentInput: {
         width: '80%',
         height: 40,
-        backgroundColor: '#ffffff',
-        paddingLeft: 10,
+        paddingRight: 5,
         borderRadius: 20,
         fontSize: 14,
         color: '#333',
     },
     sendIcon: {
-        color: '#00B894',
-        fontSize: 14,
-        fontWeight: '500',
+        width: 16,
+        height: 16,
     },
     
 });

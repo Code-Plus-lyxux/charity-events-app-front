@@ -8,7 +8,7 @@ import events from '../../constants/events';
 const Home = ({ navigation }) => {
 
   const handleAddEvent = () => {
-    navigation.navigate('EditEvent');
+    navigation.navigate('AddEvent');
   };
 
   return (
@@ -36,6 +36,7 @@ const Home = ({ navigation }) => {
             <EventCard 
               key={index} 
               event={event}
+              hostedByUser ={false}
               navigation={navigation}
               />
           ))}
