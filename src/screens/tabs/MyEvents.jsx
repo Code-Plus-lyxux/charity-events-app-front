@@ -62,7 +62,7 @@ const MyEvents = ({navigation}) => {
             <View style={styles.container}>
                 <ScrollView contentContainerStyle={styles.scrollContainer}>
                     {filteredEvents.map((event, index) => (
-                        <EventCard key={index} event={event} />
+                        <EventCard key={index} event={event} hostedByUser={true}/>
                     ))}
                 </ScrollView>
             </View>

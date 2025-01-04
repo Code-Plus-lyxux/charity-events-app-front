@@ -21,6 +21,7 @@ import UserCountIcon from '../../assets/images/user_count_icon.png';
 import ShareIcon from '../../assets/images/export.png';
 import ImInIcon from '../../assets/images/im_in_icon.png';
 import CommentIcon from '../../assets/images/comment_icon.png';
+import DeleteIcon from '../../assets/images/trash_icon.png';
 import GalleryImportIcon from '../../assets/images/gallery-import-2.png';
 import EditIcon from '../../assets/images/edit_icon_2.png';
 import SendIcon from '../../assets/images/send_icon.png';
@@ -37,10 +38,10 @@ import Event_tab
  from './Event_tab';
 const { height } = Dimensions.get('window');
 
-const Event_page = ({navigation}) => {
+const Event_page = ({navigation,route}) => {
     const [activeTab, setActiveTab] = useState('details');
     const [userCount] = useState('500');
-    const [eventHostedByUser, setEventHostedByUser] = useState(true);
+    const eventHostedByUser = route.params?.hostedByUser;;
     const [eventName] = useState('Support Animal Welfare: Spend a Day Volunteering at the Local Shelter and Make a Difference');
     const [dateTime] = useState('21 December 2024 at 9am to 4pm');
     const [location] = useState('Haven Paws Animal Shelter, Kandy');
@@ -120,22 +121,23 @@ const Event_page = ({navigation}) => {
         if (activeTab === 'media') {
             return (
                 <View style={styles.bottomBar}>
-                    {!selectImage && (
+                    {!selectImage && eventHostedByUser &&(
                         <TouchableOpacity style={styles.uploadButton1} onPress={pickImage}>
                             <Text style={styles.uploadText}>Upload</Text>
                         </TouchableOpacity>
                     )}
 
-                    {selectImage && (
+                    {selectImage && eventHostedByUser &&(
                     <>
                         <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
                             <Text style={styles.uploadText}>Upload</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
-                            style={[styles.deleteButton, {color: '#DA4F4F'}]} 
+                            style={[styles.deleteButton, {color: '#DA4F4F',flexDirection:'row'}]} 
                             onPress={''} 
                         >
                             <Text style={styles.deleteText}>Delete</Text>
+                            <Image source={DeleteIcon} style={styles.deleteIcon} />
                         </TouchableOpacity>
                     </>
                     )}
@@ -168,7 +170,7 @@ const Event_page = ({navigation}) => {
                         
                         <Image source={Event_Cover_Image} resizeMode="cover" style={styles.coverImage} />
                         <View style={styles.overlay} />
-                        <TouchableOpacity onPress={() => navigation.navigate('HomePage')} style={styles.backIconWrapper}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.backIconWrapper}>
                             <Image
                                 source={BackArrowButton2}
                                 style={styles.backArrowButton2}
@@ -475,6 +477,10 @@ const styles = StyleSheet.create({
         width: 30,
         height: 30,
     },
+    deleteIcon: {
+        width: 12,
+        height: 12,
+    },
     uploadButton1: {
         backgroundColor: '#00B894',
         justifyContent: 'center',
@@ -502,13 +508,13 @@ const styles = StyleSheet.create({
     },
     uploadText: {
         color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '500',
     },
     deleteText: {
         color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '500',
     },
     editIcon: {
         position: 'absolute',

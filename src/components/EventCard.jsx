@@ -14,7 +14,7 @@ const EventCard = (props) => {
   return (
     <View style={styles.card}>
       <View>
-        <Pressable onPress={() => navigation.navigate('EventPage')} style={styles.container}>
+        <Pressable  onPress={() => navigation.navigate('EventPage', { hostedByUser: props.hostedByUser })} style={styles.container}>
 
           <Text style={styles.title} numberOfLines={2}>{props.event.title}</Text>
 

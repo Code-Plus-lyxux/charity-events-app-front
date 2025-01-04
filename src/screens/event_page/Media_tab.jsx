@@ -104,7 +104,38 @@ const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) 
                         </>
                     )
                 ) : (
-                    <Text style={styles.mediaText}>Media content shared by others will appear here.</Text>
+                    no_of_UploadedImages === 0 ? (
+                    <Text style={styles.mediaText}>No media to show</Text>
+                    ):(
+                        <View style={styles.collageContainer}>
+                                {uploadedImages.slice(0, no_of_UploadedImages).map((image, index) => (
+                                    <TouchableOpacity
+                                    key={index}
+                                    onPress={() => {
+                                        if (selectButtonPressed) {
+                                            toggleImageSelection(index);
+                                            onSelectImage(selectedImages.length > 0);
+                                            console.log('array length :'+selectedImages.length +'  array:' +selectedImages);
+                                        }
+                                    }}
+                                    activeOpacity={selectButtonPressed ? 0.7 : 1}
+                                    style={styles.imageWrapper}
+                                >
+                                    <Image
+                                        source={image}
+                                        style={styles.uploadedImage}
+                                        resizeMode="cover"
+                                    />
+                                    {selectButtonPressed && selectedImages.includes(index) && (
+                                        <Image
+                                            source={TickCircleIcon}
+                                            style={styles.tickIcon}
+                                        />
+                                    )}
+                                </TouchableOpacity>
+                                ))}
+                        </View>
+                    )
                 )}
             </View>
         </ScrollView>
