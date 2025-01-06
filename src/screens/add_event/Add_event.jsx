@@ -1,4 +1,5 @@
 import React,{ useState,useEffect } from 'react';
+import axios from 'axios';
 import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable,TouchableOpacity,Modal,Animated,FlatList,TouchableWithoutFeedback} from 'react-native';
 import BackArrowIcon from '../../assets/images/back_arrow_icon_2.png';
 import SearchNormalIcon from '../../assets/images/search-normal.png';
@@ -12,11 +13,15 @@ import { CoverPhotoUploadPortal } from '../../components/CoverPhotoUploadPortal'
 
 const Add_event = ({navigation}) => {
 
-    const [eventName, setEventName] = useState('');
-    const [startDateTime, setStartDateTime] = useState('');
-    const [endDateTime, setEndDateTime] = useState('');
-    const [location, setLocation] = useState('');
-    const [aboutEvent, setAboutEvent] = useState('');
+    const [eventDetails, setEventDetails] = useState({
+        coverPhoto: '',
+        eventName: '',
+        startDateTime: '',
+        endDateTime: '',
+        location: '',
+        aboutEvent: '',
+        status: '0'
+    });    
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching,setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Kandy','Kandy,Sri Lanka']);
@@ -24,6 +29,40 @@ const Add_event = ({navigation}) => {
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
 
+    const handleFieldChange = (field, value) => {
+        setEventDetails((prevDetails) => ({
+            ...prevDetails,
+            [field]: value,
+        }));
+    };
+
+    const submitEventDetails = async () => {
+        const formattedEventDetails = {
+            ...eventDetails,
+            startDate: eventDetails.startDateTime,
+            endDate: eventDetails.endDateTime,
+            images: [eventDetails.coverPhoto], // Convert coverPhoto to an array
+            status: parseInt(eventDetails.status, 10), // Convert status to a number
+        };
+    
+        try {
+            const response = await axios.post(
+                'http://10.0.3.2:5001/api/events/add',
+                formattedEventDetails,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2JjYTk4M2MyMmFiNDU1YmZlNjA2ZSIsImlhdCI6MTczNjE3NDI0NCwiZXhwIjoxNzM2MTc3ODQ0fQ.KKbpYhJn3nTIUUL4EqUGzY0U92AGnnYJ7OxnklY4z1A',
+                    },
+                }
+            );
+            console.log('Event saved:', response.data);
+        } catch (error) {
+            console.error('Error saving event:', error.response ? error.response.data : error.message);
+        }
+    };
+    
+    
 
     // Trigger slide-up animation when modal is shown
     useEffect(() => {
@@ -60,9 +99,16 @@ const Add_event = ({navigation}) => {
     };
 
     const handleSuggestionSelect = (suggestion) => {
-        setLocation(suggestion);
+        handleFieldChange('location', suggestion);
         setIsModalVisible(false);
     };
+
+    const updateCoverPhoto = (uri) => {
+        setEventDetails((prevDetails) => ({
+          ...prevDetails,
+          coverPhoto: uri,
+        }));
+      };
 
     return (
         <SafeAreaView>
@@ -76,14 +122,14 @@ const Add_event = ({navigation}) => {
                     </View>
 
                 <View style={styles.container}>
-                    <CoverPhotoUploadPortal onUploadImage={''}/>
-                    <EventDetail property='Event Name' value={eventName} onChangeText={(text) => setEventName(text)}/>
-                    <DateTimePickerComponent property='Start date and time' value={startDateTime} start_or_end='Start' onChangeDateTime={(datetime) => setStartDateTime(datetime.toISOString())} />
-                    <DateTimePickerComponent property='End date and time' value={endDateTime} start_or_end='End' onChangeDateTime={(datetime) => setEndDateTime(datetime.toISOString())} />
-                    <LocationDetail property='Location' value={location} onPress={() => setIsModalVisible(true)}/>
-                    <AboutEvent property='About Event' value={aboutEvent} onChangeText={(text) => setAboutEvent(text)}/>
+                    <CoverPhotoUploadPortal onCoverPhotoChange={updateCoverPhoto}/>
+                    <EventDetail property='Event Name' value={eventDetails.eventName} onChangeText={(text) => handleFieldChange('eventName', text)}/>
+                    <DateTimePickerComponent property='Start date and time' value={eventDetails.startDateTime} start_or_end='Start' onChangeDateTime={(datetime) => handleFieldChange('startDateTime', datetime.toISOString())} />
+                    <DateTimePickerComponent property='End date and time' value={eventDetails.endDateTime} start_or_end='End' onChangeDateTime={(datetime) => handleFieldChange('endDateTime', datetime.toISOString())} />
+                    <LocationDetail property='Location' value={eventDetails.location} onPress={() => setIsModalVisible(true)}/>
+                    <AboutEvent property='About Event' value={eventDetails.aboutEvent} onChangeText={(text) => handleFieldChange('aboutEvent', text)}/>
 
-                    <TouchableOpacity style={styles.Create_Event_Button} onPress={''}>
+                    <TouchableOpacity style={styles.Create_Event_Button} onPress={()=>submitEventDetails()}>
                         <Text style={styles.buttonTextCreateEvent}>Create Event</Text>
                     </TouchableOpacity>
 
@@ -118,7 +164,7 @@ const Add_event = ({navigation}) => {
                         >
                             <TextInput
                                 style={[styles.locationInput, { flex: 1 }]} 
-                                value={location}
+                                value={eventDetails.location}
                                 onChangeText={(text) => {
                                     setLocation(text);
                                     setActiveLocationSearching(true);
