@@ -1,35 +1,35 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import EventCard from '../../components/EventCard';
+import Hero from '../../assets/images/event-cover.png';
 import EventFilters from '../../components/EventFilters';
 import { getLoggedUser } from '../../api/user';
 
-const MyEvents = () => {
+const MyEventsNew = () => {
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('Hosting');
-
-  const filterLabels = {
-    Hosting: 'Hosting',
-    Upcoming: 'Upcoming Events',
-    Past: 'Past Events',
-  };
+  const [activeTab, setActiveTab] = useState('Hosting'); 
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const userData = await getLoggedUser();
-        console.log('my events user data', userData);
+        console.log(userData);
 
-        // Set the user data and individual event types
         setUser(userData);
-        setEvents({
-          Hosting: userData.eventsCreated || [],
-          Upcoming: userData.eventsAttending || [],
-          Past: userData.eventsAttended || [],
-        });
+        
+        // Combine all event arrays into one
+        const allEvents = [
+          ...userData.eventsAttended,
+          ...userData.eventsCreated,
+          ...userData.eventsAttending,
+        ];
+
+        setUser(userData);
+        setEvents(allEvents); // Set the combined events to state
       } catch (err) {
         setError(err.message);
       } finally {
@@ -40,6 +40,7 @@ const MyEvents = () => {
     fetchUser();
   }, []);
 
+
   if (error) {
     return (
       <View style={styles.errorContainer}>
@@ -48,7 +49,7 @@ const MyEvents = () => {
     );
   }
 
-  if (loading) {
+  if (!user) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Loading...</Text>
@@ -56,8 +57,6 @@ const MyEvents = () => {
     );
   }
 
-  // Get the events for the active tab
-  const filteredEvents = events[activeTab] || [];
 
   return (
     <View style={styles.mainContainer}>
@@ -78,26 +77,22 @@ const MyEvents = () => {
         </Pressable>
       </View>
 
-      {/* Event Filters */}
-      <EventFilters
-        activeTab={activeTab}
-        onFilterChange={(filter) => setActiveTab(filter)}
-        filterLabels={filterLabels}
-      />
+      <EventFilters activeTab={'Hosting'} onFilterChange={() => { }} />
 
-      {/* Event List */}
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {filteredEvents.map((event, index) => (
+          {events.map((event, index) => (
             <EventCard key={index} event={event} />
           ))}
         </ScrollView>
       </View>
+
     </View>
   );
+
 };
 
-export default MyEvents;
+export default MyEventsNew;
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -116,17 +111,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: '5%',
     justifyContent: 'flex-start',
     alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
   },
 });

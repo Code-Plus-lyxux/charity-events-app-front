@@ -18,6 +18,7 @@ import UserProfile from './screens/tabs/UserProfile';
 import EventPage from './screens/event_page/Event_page';
 import EditEvent from './screens/edit_event/EditEvent';
 import EmailVerification from './screens/auth/EmailVerification';
+import MyEventsNew from './screens/tabs/MyEventsNew';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 
@@ -137,6 +138,10 @@ const App = () => {
                                 <Stack.Screen
                                         name="EmailVerification"
                                         component={EmailVerification}
+                                />
+                                <Stack.Screen
+                                        name="MyEventsNew"
+                                        component={MyEventsNew}
                                 />
                         </Stack.Navigator>
                 </NavigationContainer>
