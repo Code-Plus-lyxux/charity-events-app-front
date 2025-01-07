@@ -7,6 +7,9 @@ import close_icon from '../../assets/images/close_icon.png';
 import { ProfileDetail } from '../../components/ProfileDetail';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import axios from 'axios';
+import * as ImagePicker from 'react-native-image-picker';
+//import ImageCropPicker from 'react-native-image-crop-picker';
+
 
 
 const Profile_page = ({ navigation }) => {
@@ -98,16 +101,20 @@ const Profile_page = ({ navigation }) => {
 
     // Open Image Gallery and Crop Image
     const handleEditImage = () => {
-        ImageCropPicker.openPicker({
-            width: 300,
-            height: 400,
-            cropping: true,
-          }).then(image => {
-            setImageUri(image.path);
-          }).catch(error => {
-            console.log('ImagePicker Error: ', error);
-          });
+        ImagePicker.launchImageLibrary({
+            mediaType: 'photo',
+            quality: 0.5,
+        }, response => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.errorCode) {
+                console.log('ImagePicker Error: ', response.errorMessage);
+            } else {
+                setImageUri(response.assets[0].uri);
+            }
+        });
     };
+    
     
 
     return (

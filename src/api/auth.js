@@ -1,4 +1,5 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const API_URL = 'http://10.0.2.2:5001';
 
 // Register a new user
@@ -16,7 +17,10 @@ export const registerUser = async (userData) => {
 export const loginUser = async (credentials) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, credentials);
-    return response.data; 
+    const token = response.data.token; 
+    await AsyncStorage.setItem('authToken', token);
+    return response.data;
+    
   } catch (error) {
     if (error.response) {
       throw new Error(error.response.data.message);

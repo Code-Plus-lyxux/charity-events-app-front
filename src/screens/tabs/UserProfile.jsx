@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, Pressable } from 'react-native';
 import user_image from '../../assets/images/user_image.png';
 import icons from '../../constants/icons';
 import events from '../../constants/events';
 import EventCard from '../../components/EventCard';
 import IconToggle from '../../components/IconToggle';
+import { fetchEvents } from '../../api/events';
+import { useUser } from '../../context/UserContext';
 
 const UserProfile = ({ navigation }) => {
     const user = {
@@ -12,6 +14,29 @@ const UserProfile = ({ navigation }) => {
         email: 'lucilebarret@gmail.com',
         image: user_image,
     };
+
+
+    const [events, setEvents] = useState([]);
+      const [loading, setLoading] = useState(true);
+    
+      useEffect(() => {
+        const getEvents = async () => {
+            if (!user) {
+                console.log("User not logged in");
+                return; // Stop if user is not logged in
+              }
+          try {
+            const eventsData = await fetchEvents(1, user.userId, 10);
+            setEvents(eventsData.events || []);
+          } catch (error) {
+            console.error('Error fetching events:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+    
+        getEvents();
+      }, []);
 
     return (
         <SafeAreaView style={styles.safeArea}>
