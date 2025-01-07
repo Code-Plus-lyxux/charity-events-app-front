@@ -48,14 +48,6 @@ const MyEvents = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
   // Get the events for the active tab
   const filteredEvents = events[activeTab] || [];
 
@@ -88,9 +80,11 @@ const MyEvents = () => {
       {/* Event List */}
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {filteredEvents.map((event, index) => (
+          {loading ? (
+            <Text>Loading...</Text>
+          ) : (filteredEvents.map((event, index) => (
             <EventCard key={index} event={event} />
-          ))}
+          )))}
         </ScrollView>
       </View>
     </View>

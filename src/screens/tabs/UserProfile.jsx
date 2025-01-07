@@ -70,13 +70,15 @@ const UserProfile = ({ navigation }) => {
         );
     }
 
-    if (!user) {
+    
+    if (loading) {
         return (
             <View>
                 <Text>Loading...</Text>
             </View>
         );
     }
+
 
 
     return (
@@ -88,7 +90,7 @@ const UserProfile = ({ navigation }) => {
             </Pressable>
             <View style={styles.container}>
                 <Image
-                    source={user.image ? { uri: user.image } : user_image}
+                    source={user.profileImage ? { uri: user.image } : user_image}
                     resizeMode="contain"
                     style={styles.imageStyle}
                 />
@@ -101,9 +103,11 @@ const UserProfile = ({ navigation }) => {
                 <ScrollView
                     contentContainerStyle={styles.scrollContainer}
                     showsVerticalScrollIndicator={false}>
-                    {events.map((event, index) => (
+                    {loading ? (
+            <Text>Loading...</Text>
+          ) : (events.map((event, index) => (
                         <EventCard key={index} event={event} />
-                    ))}
+                    )))}
                 </ScrollView>
             </View>
         </SafeAreaView>
