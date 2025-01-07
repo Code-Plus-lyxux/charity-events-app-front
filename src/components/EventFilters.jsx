@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 
-const EventFilters = ({ activeTab, onFilterChange }) => {
+const EventFilters = ({ activeTab, onFilterChange, filterLabels }) => {
   return (
     <View style={styles.container}>
-      {['Hosting', 'Upcoming Events', 'Past Events'].map((filter) => (
+      {Object.keys(filterLabels).map((filter) => (
         <Pressable
           key={filter}
           style={[
@@ -19,7 +19,7 @@ const EventFilters = ({ activeTab, onFilterChange }) => {
               activeTab === filter && styles.activeTabText,
             ]}
           >
-            {filter}
+            {filterLabels[filter]} {/* Display custom label */}
           </Text>
         </Pressable>
       ))}

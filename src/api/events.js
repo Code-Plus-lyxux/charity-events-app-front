@@ -4,7 +4,8 @@ const API_URL = 'http://10.0.2.2:5001';
 
 export const fetchEvents = async (status, page, pageSize) => {
     try {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token::edf', token);
 
         if (!token) {
             throw new Error('No token found');
@@ -12,7 +13,7 @@ export const fetchEvents = async (status, page, pageSize) => {
 
         const response = await axios.get(`${API_URL}/api/events`, {
             headers: {
-                Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3NzdkNDA3ZGVmYjVlMTc4YTgzZDU5YSIsImlhdCI6MTczNjE3MDU2NSwiZXhwIjoxNzM2MTc0MTY1fQ.UgE4BKXXJKI43Cz25kGq05lnENmpchNo281eyACYckU`,
+                Authorization: `Bearer ${token}`,
             },
             params: { status, page, pageSize },
         });

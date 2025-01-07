@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
 import icons from "../constants/icons";
 
-const IconToggle = () => {
+const IconToggle = ({ onIconPress }) => {
     const [activeIcon, setActiveIcon] = useState("grid");
 
     const handlePress = (icon) => {
         setActiveIcon(icon);
+        onIconPress(icon); // Pass the clicked icon to the parent component
     };
 
     return (
@@ -14,35 +15,22 @@ const IconToggle = () => {
             <TouchableOpacity onPress={() => handlePress("grid")} style={styles.iconWrapper}>
                 <Image
                     source={icons.GridBlack}
-                    style={[
-                        activeIcon === "grid" ? styles.activeIcon : styles.inactiveIcon,
-                    ]}
+                    style={[activeIcon === "grid" ? styles.activeIcon : styles.inactiveIcon]}
                 />
-                <View
-                    style={[
-                        styles.underline,
-                        activeIcon === "grid" ? styles.activeUnderline : null,
-                    ]}
-                />
+                <View style={[styles.underline, activeIcon === "grid" ? styles.activeUnderline : null]} />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => handlePress("hand")} style={styles.iconWrapper}>
                 <Image
                     source={icons.HandBlack}
-                    style={[
-                        activeIcon === "hand" ? styles.activeIcon : styles.inactiveIcon,
-                    ]}
+                    style={[activeIcon === "hand" ? styles.activeIcon : styles.inactiveIcon]}
                 />
-                <View
-                    style={[
-                        styles.underline,
-                        activeIcon === "hand" ? styles.activeUnderline : null,
-                    ]}
-                />
+                <View style={[styles.underline, activeIcon === "hand" ? styles.activeUnderline : null]} />
             </TouchableOpacity>
         </View>
     );
 };
+
 
 export default IconToggle;
 
