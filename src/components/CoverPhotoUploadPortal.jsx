@@ -5,7 +5,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import GalleryImportIcon from '../assets/images/gallery-import.png';
 import UploadIcon from '../assets/images/upload_icon.png';
 
-export const CoverPhotoUploadPortal = () => {
+export const CoverPhotoUploadPortal = ({ onCoverPhotoChange }) => {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const handleImageUpload = async () => {
@@ -15,7 +15,9 @@ export const CoverPhotoUploadPortal = () => {
         quality: 0.5,
       });
       if (result.assets && result.assets.length > 0) {
-        setSelectedImage(result.assets[0].uri);
+        const uri = result.assets[0].uri;
+        setSelectedImage(uri);
+        onCoverPhotoChange(uri); // Notify the parent about the selected image
       }
     } catch (error) {
       Alert.alert('Error', 'Something went wrong while selecting the image.');

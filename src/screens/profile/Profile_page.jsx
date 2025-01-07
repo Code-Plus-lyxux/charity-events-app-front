@@ -5,6 +5,8 @@ import edit_icon from '../../assets/images/edit_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
 import close_icon from '../../assets/images/close_icon.png';
 import { ProfileDetail } from '../../components/ProfileDetail';
+import ImageCropPicker from 'react-native-image-crop-picker';
+import axios from 'axios';
 import * as ImagePicker from 'react-native-image-picker';
 //import ImageCropPicker from 'react-native-image-crop-picker';
 
@@ -21,6 +23,32 @@ const Profile_page = ({ navigation }) => {
     const [newValue, setNewValue] = useState('');
     const [imageUri, setImageUri] = useState(null);// Set default image
 
+    const submitProfileDetails = async () => {
+        const formattedProfileDetails = {
+            name,
+            email,
+            about,
+            location,
+            phoneNumber,
+        };
+    
+        try {
+            const response = await axios.put(
+                'http://10.0.3.2:5001/api/user/profile', // Update the endpoint as needed
+                formattedProfileDetails,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer YOUR_JWT_TOKEN', // Replace with a valid token
+                    },
+                }
+            );
+            console.log('Profile updated:', response.data);
+        } catch (error) {
+            console.error('Error updating profile:', error.response ? error.response.data : error.message);
+        }
+    };
+
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
 
@@ -29,6 +57,7 @@ const Profile_page = ({ navigation }) => {
         setCurrentDetail({ property, value });
         setNewValue(value);
         setIsModalVisible(true);
+        submitProfileDetails();
     };
 
     // Save Updated Detail
