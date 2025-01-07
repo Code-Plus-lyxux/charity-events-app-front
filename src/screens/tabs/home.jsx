@@ -1,11 +1,29 @@
 import { View, Text, StyleSheet, ScrollView, Image, Pressable } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import EventCard from '../../components/EventCard';
 import SearchBar from '../../components/SearchBar';
 import Location from '../../assets/icons/location-black.png';
 import events from '../../constants/events';
+import { fetchEvents } from '../../api/events';
 
 const Home = ({ navigation }) => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getEvents = async () => {
+      try {
+        const eventsData = await fetchEvents(1, 1, 10);
+        setEvents(eventsData.events || []);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getEvents();
+  }, []);
 
   const handleAddEvent = () => {
     navigation.navigate('AddEvent');
@@ -32,14 +50,13 @@ const Home = ({ navigation }) => {
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}>
-          {(events).map((event, index) => (
-            <EventCard 
-              key={index} 
-              event={event}
-              hostedByUser ={false}
-              navigation={navigation}
-              />
-          ))}
+          {loading ? (
+            <Text>Loading...</Text>
+          ) : (
+            events.map((event, index) => (
+              <EventCard key={index} event={event} hostedByUser={true} />
+            ))
+          )}
         </ScrollView>
 
       </View>
