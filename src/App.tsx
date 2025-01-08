@@ -18,7 +18,6 @@ import UserProfile from './screens/tabs/UserProfile';
 import EventPage from './screens/event_page/Event_page';
 import EditEvent from './screens/edit_event/EditEvent';
 import EmailVerification from './screens/auth/EmailVerification';
-import MyEventsNew from './screens/tabs/MyEventsNew';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 
@@ -73,7 +72,7 @@ const TabNavigator = () => {
 const App = () => {
 
         const isTesting = true; // Set this to true for testing purposes
-        const testScreen = 'Tabs'; // Set this to the screen you want to test
+        const testScreen = 'Login'; // Set this to the screen you want to test
 
         return (
                 <NavigationContainer>
@@ -138,10 +137,6 @@ const App = () => {
                                 <Stack.Screen
                                         name="EmailVerification"
                                         component={EmailVerification}
-                                />
-                                <Stack.Screen
-                                        name="MyEventsNew"
-                                        component={MyEventsNew}
                                 />
                         </Stack.Navigator>
                 </NavigationContainer>

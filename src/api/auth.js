@@ -22,7 +22,7 @@ export const loginUser = async (credentials) => {
     await AsyncStorage.setItem('token', token);
     await AsyncStorage.setItem('userId', userId);
 
-    console.log('Tokenfr:', token, 'user::', userId);
+    console.log('Token:', token, 'user::', userId);
 
     return response.data;
     

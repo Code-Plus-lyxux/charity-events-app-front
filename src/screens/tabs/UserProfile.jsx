@@ -7,7 +7,7 @@ import EventCard from '../../components/EventCard';
 import IconToggle from '../../components/IconToggle';
 import { fetchEvents } from '../../api/events';
 import { useUser } from '../../context/UserContext';
-import { getLoggedUser } from '../../api/user';
+import { getSlideItemUser } from '../../api/user';
 
 const UserProfile = ({ navigation }) => {
     const userr = {
