@@ -26,7 +26,7 @@ const Home = ({ navigation }) => {
   }, []);
 
   const handleAddEvent = () => {
-    navigation.navigate('AddEvent');
+    navigation.navigate('MyEventsNew');
   };
 
   return (

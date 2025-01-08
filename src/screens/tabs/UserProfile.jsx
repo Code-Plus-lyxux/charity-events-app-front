@@ -7,9 +7,10 @@ import EventCard from '../../components/EventCard';
 import IconToggle from '../../components/IconToggle';
 import { fetchEvents } from '../../api/events';
 import { useUser } from '../../context/UserContext';
+import { getLoggedUser } from '../../api/user';
 
 const UserProfile = ({ navigation }) => {
-    const user = {
+    const userr = {
         name: 'Lucifer Barret',
         email: 'lucilebarret@gmail.com',
         image: user_image,
@@ -17,26 +18,68 @@ const UserProfile = ({ navigation }) => {
 
 
     const [events, setEvents] = useState([]);
-      const [loading, setLoading] = useState(true);
-    
-      useEffect(() => {
-        const getEvents = async () => {
-            if (!user) {
-                console.log("User not logged in");
-                return; // Stop if user is not logged in
-              }
-          try {
-            const eventsData = await fetchEvents(1, user.userId, 10);
-            setEvents(eventsData.events || []);
-          } catch (error) {
-            console.error('Error fetching events:', error);
-          } finally {
-            setLoading(false);
-          }
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const userData = await getLoggedUser();
+                console.log(userData);
+
+                setUser(userData);
+
+                // Combine all event arrays into one
+                const allEvents = [
+                    ...userData.eventsAttended,
+                    ...userData.eventsCreated,
+                    ...userData.eventsAttending,
+                ];
+
+                setUser(userData);
+                setEvents(allEvents); // Set the combined events to state
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
         };
+
+        fetchUser();
+    }, []);
+
+    const handleIconPress = (icon) => {
+        if (icon === "hand") {
+            setEvents(user.eventsAttending); // Only show attending events
+        } else {
+            const allEvents = [
+                ...user.eventsAttended,
+                ...user.eventsCreated,
+                ...user.eventsAttending,
+            ];
+            setEvents(allEvents); // Show all events
+        }
+    };
+
+    if (error) {
+        return (
+            <View>
+                <Text>Error: {error}</Text>
+            </View>
+        );
+    }
+
     
-        getEvents();
-      }, []);
+    if (loading) {
+        return (
+            <View>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
+
+
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -46,18 +89,25 @@ const UserProfile = ({ navigation }) => {
                 </View>
             </Pressable>
             <View style={styles.container}>
-                <Image source={user.image} resizeMode="contain" style={styles.imageStyle} />
-                <Text style={styles.NameText}>{user.name}</Text>
+                <Image
+                    source={user.profileImage ? { uri: user.image } : user_image}
+                    resizeMode="contain"
+                    style={styles.imageStyle}
+                />
+
+                <Text style={styles.NameText}>{user.firstName}</Text>
                 <Text style={styles.EmailText}>{user.email}</Text>
             </View>
-            <IconToggle />
+            <IconToggle onIconPress={handleIconPress} />
             <View style={styles.eventsSection}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContainer}
                     showsVerticalScrollIndicator={false}>
-                    {events.map((event, index) => (
+                    {loading ? (
+            <Text>Loading...</Text>
+          ) : (events.map((event, index) => (
                         <EventCard key={index} event={event} />
-                    ))}
+                    )))}
                 </ScrollView>
             </View>
         </SafeAreaView>

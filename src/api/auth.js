@@ -17,8 +17,13 @@ export const registerUser = async (userData) => {
 export const loginUser = async (credentials) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, credentials);
-    const token = response.data.token; 
-    await AsyncStorage.setItem('authToken', token);
+    const {token, userId} = response.data; 
+
+    await AsyncStorage.setItem('token', token);
+    await AsyncStorage.setItem('userId', userId);
+
+    console.log('Tokenfr:', token, 'user::', userId);
+
     return response.data;
     
   } catch (error) {
