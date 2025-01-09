@@ -61,7 +61,7 @@ const Event_page = ({ navigation, route }) => {
     };
 
     useEffect(() => {
-        let isMounted = true; // Prevent state updates on unmounted components
+        let isMounted = true;
     
         const fetchData = async () => {
             try {
@@ -100,7 +100,7 @@ const Event_page = ({ navigation, route }) => {
         fetchData();
     
         return () => {
-            isMounted = false; // Cleanup flag
+            isMounted = false;
         };
     }, [id, refreshKey]);
     
@@ -191,6 +191,7 @@ const Event_page = ({ navigation, route }) => {
                 setIsAttending(true);
                 console.log('User Added to Event', event._id, user._id);
             }
+            setRefreshKey((prevKey) => prevKey + 1);
         } catch (err) {
             setError(`Could not update user in the event: ${err.message}`);
         } finally {

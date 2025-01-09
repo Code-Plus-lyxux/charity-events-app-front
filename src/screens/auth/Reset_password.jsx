@@ -6,10 +6,7 @@ import EyeOffIcon from '../../assets/images/hide_password.png';
 import CheckIcon from '../../assets/images/check_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
 
-
 const Reset_password = ({ navigation }) => {
-
-
     const [newPassword, setNewPassword] = useState('');
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
