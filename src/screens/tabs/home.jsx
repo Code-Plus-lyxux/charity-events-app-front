@@ -26,7 +26,7 @@ const Home = ({ navigation }) => {
   }, []);
 
   const handleAddEvent = () => {
-    navigation.navigate('MyEventsNew');
+    navigation.navigate('Event');
   };
 
   return (
@@ -54,7 +54,7 @@ const Home = ({ navigation }) => {
             <Text>Loading...</Text>
           ) : (
             events.map((event, index) => (
-              <EventCard key={index} event={event} hostedByUser={true} />
+              <EventCard key={index} event={event} hostedByUser={false} />
             ))
           )}
         </ScrollView>

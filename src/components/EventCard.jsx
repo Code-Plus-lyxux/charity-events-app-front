@@ -23,7 +23,10 @@ const EventCard = (props) => {
       <View>
   
           <Pressable
-            onPress={() => navigation.navigate('EventPage', { id: props.event._id }, { hostedByUser: props.hostedByUser })}
+            onPress={() => navigation.navigate('EventPage', { 
+              id: props.event._id , 
+              hostedByUser: props.hostedByUser 
+            })}
             style={styles.container}
           >
 

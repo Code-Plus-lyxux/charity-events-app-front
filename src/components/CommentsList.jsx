@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import profileImage from '../assets/images/user_image.png'; 
+import profileImage from '../assets/images/user_image.png'; // Replace with your actual profile image
 
 const CommentsList = ({ comments }) => {
     return (
-        <View >
+        <View>
             {comments && comments.length > 0 ? (
                 comments.map((comment, index) => (
                     <View key={index} style={styles.commentContainer}>
@@ -17,8 +17,8 @@ const CommentsList = ({ comments }) => {
                             style={styles.profileImage}
                         />
                         <View style={styles.commentContent}>
-                        <Text style={styles.name}>{comment.userId?.firstName || 'Unknown User'}</Text>
-                        <Text style={styles.commentText}>{comment.comment}</Text>
+                            <Text style={styles.name}>{comment.userId?.fullName || 'Unknown User'}</Text>
+                            <Text style={styles.commentText}>{comment.comment}</Text>
                         </View>
                     </View>
                 ))
@@ -38,27 +38,27 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginBottom: 15,
         alignItems: 'flex-start',
-        marginRight:'10'
-      },
-      profileImage: {
+        marginRight: '10'
+    },
+    profileImage: {
         width: 40,
         height: 40,
         borderRadius: 20,
         marginRight: 10,
-      },
-      commentContent: {
+    },
+    commentContent: {
         flexDirection: 'column',
-        marginRight:'10'
-      },
-      name: {
+        marginRight: '10'
+    },
+    name: {
         fontWeight: 'bold',
         fontSize: 14,
-      },
-      commentText: {
+    },
+    commentText: {
         marginTop: 5,
         fontSize: 12,
         color: '#333',
-      },
+    },
 });
 
 export default CommentsList;

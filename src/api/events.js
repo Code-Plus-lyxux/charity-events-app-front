@@ -46,35 +46,35 @@ export const fetchEvents = async (status, page, pageSize) => {
  */
 export const getEventById = async (eventId) => {
     try {
-      console.log(`Fetching event with ID: ${eventId}`);
+        console.log(`Fetching event with ID: ${eventId}`);
 
-      const token = await AsyncStorage.getItem('token');
+        const token = await AsyncStorage.getItem('token');
 
         if (!token) {
             throw new Error('No token found');
         }
 
-      const response = await axios.get(`${API_URL}/api/events/${eventId}`,{
-        headers: {
-            Authorization: `Bearer ${token}`,
-        }
-    });
-      console.log("Event fetched successfully:", response.data);
-      return response.data;
+        const response = await axios.get(`${API_URL}/api/events/${eventId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        });
+        console.log("Event fetched successfully:", response.data);
+        return response.data;
     } catch (error) {
-      if (error.response) {
-        console.error("Error response:", error.response.data);
-        throw new Error(error.response.data.message || "Failed to fetch event");
-      } else {
-        console.error("Network error:", error.message);
-        throw new Error("An error occurred while fetching the event");
-      }
+        if (error.response) {
+            console.error("Error response:", error.response.data);
+            throw new Error(error.response.data.message || "Failed to fetch event");
+        } else {
+            console.error("Network error:", error.message);
+            throw new Error("An error occurred while fetching the event");
+        }
     }
-  };
+};
 
 
-  // Add a comment to an event
-  export const addCommentToEvent = async (eventId, comment) => {
+// Add a comment to an event
+export const addCommentToEvent = async (eventId, comment) => {
     try {
         const token = await AsyncStorage.getItem('token');
         if (!token) {
@@ -97,34 +97,56 @@ export const getEventById = async (eventId) => {
         throw error;
     }
 };
-  
-  
+
+
 export const addUserToEvent = async (eventId, userId) => {
-  try {
-    const token = await AsyncStorage.getItem('token');
+    try {
+        const token = await AsyncStorage.getItem('token');
         if (!token) {
             throw new Error('No token found');
         }
 
-      const response = await fetch(`/api/events/${eventId}/attend`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`, 
-          },
-          body: JSON.stringify({ userId }), 
-      });
+        const response = await fetch(`${API_URL}/api/events/${eventId}/attend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ userId }),
+        });
 
-      if (!response.ok) {
-          const data = await response.json();
-          console.error('Failed to add user to event:', data);
-          throw new Error(data.message || 'Failed to add user to event');
-      }
+        if (!response.ok) {
+            const data = await response.json();
+            console.error('Failed to add user to event:', { status: response.status, data });
+            throw new Error(data.message || 'Failed to add user to event');
+        }
 
-      const data = await response.json();
-      return data.event;
-  } catch (err) {
-      console.error('Error adding user to event:', err);
-      throw new Error(err.message || 'An error occurred while adding the user to the event');
-  }
+        const data = await response.json();
+        return data.event;
+    } catch (err) {
+        console.error('Error adding user to event:', err.message);
+        throw new Error(err.message || 'An error occurred while adding the user to the event');
+    }
+};
+
+
+//Remove user from event
+export const removeUserFromEvent = async (eventId) => {
+    try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+            throw new Error('No token found');
+        }
+        const response = await axios.delete(`${API_URL}/api/events/${eventId}/attend`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+        console.log(response.data.message);
+        return response.data.event;
+    } catch (error) {
+        console.error("Error removing user from event:", error.response?.data?.message || error.message);
+        alert("Failed to remove user from event");
+    }
 };

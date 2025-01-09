@@ -1,20 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Image,
-    TouchableOpacity,
-    Text,
-    SafeAreaView,
-    ScrollView,
-    View,
-    StyleSheet,
-    Dimensions,
-    Modal,
-    TextInput,
-    KeyboardAvoidingView,
-    Platform,
-    Animated,
-    PanResponder
-} from 'react-native';
+import { Image, TouchableOpacity, Text, SafeAreaView, ScrollView, View, StyleSheet, Dimensions, Modal, TextInput, KeyboardAvoidingView, Platform, Animated, PanResponder } from 'react-native';
 import Event_Cover_Image from '../../assets/images/event-cover.png';
 import UserCountIcon from '../../assets/images/user_count_icon.png';
 import ShareIcon from '../../assets/images/export.png';
@@ -33,14 +18,15 @@ import { fi } from 'date-fns/locale';
 import CommentsList from '../../components/CommentsList';
 import { addCommentToEvent } from '../../api/events';
 import { addUserToEvent } from '../../api/events';
+import { removeUserFromEvent } from '../../api/events';
 import { getLoggedUser } from '../../api/user';
+
 
 const { height } = Dimensions.get('window');
 
 const Event_page = ({ navigation, route }) => {
     const [activeTab, setActiveTab] = useState('details');
-    const [userCount] = useState('500');
-    const eventHostedByUser = route.params?.hostedByUser;;
+    const eventHostedByUser = route.params?.hostedByUser;
     const [modalVisible, setModalVisible] = useState(false);
     const [comment, setComment] = useState('');
     const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(4);
@@ -52,27 +38,16 @@ const Event_page = ({ navigation, route }) => {
     const slideAnim = useState(new Animated.Value(0))[0];
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [loadingUser, setLoadingUser] = useState(true);
+    const [loadingAttend, setLoadingAttend] = useState(true);
+    const [refreshKey, setRefreshKey] = useState(0);
 
-    const { id } = route.params;
 
-     useEffect(() => {
-        const fetchUser = async () => {
-          try {
-            const userData = await getLoggedUser();
-            
-            setUser(userData);
-            
-            console.log('User Data:', user);
-            
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setLoading(false);
-          }
-        };
-    
-        fetchUser();
-      }, []);
+    const { id, hostedByUser } = route.params;
+
+    console.log('eventHostedByUser', id, hostedByUser);
+
+   
 
     const handleSelectImage = (state) => {
         setSelectImage(state);
@@ -84,6 +59,53 @@ const Event_page = ({ navigation, route }) => {
         1: 'Upcoming',
         2: 'Past',
     };
+
+    useEffect(() => {
+        let isMounted = true; // Prevent state updates on unmounted components
+    
+        const fetchData = async () => {
+            try {
+                // Fetch user data
+                const userData = await getLoggedUser();
+                if (isMounted) {
+                    setUser(userData);
+                    console.log('User:', userData);
+                }
+    
+                // Fetch event data
+                const eventData = await getEventById(id);
+                if (isMounted) {
+                    setEvent(eventData);
+                }
+    
+                // Check if the user is attending the event
+                if (isMounted && eventData?.attendUsers) {
+                    const isUserAttending = eventData.attendUsers.includes(userData?._id);
+                    setIsAttending(isUserAttending);
+                    console.log('User is attending:', isUserAttending);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError(err.message);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                    setLoadingUser(false);
+                    setLoadingAttend(false);
+                }
+            }
+        };
+    
+        fetchData();
+    
+        return () => {
+            isMounted = false; // Cleanup flag
+        };
+    }, [id, refreshKey]);
+    
+
+
 
     const formatEventDate = (startDate, endDate) => {
         const start = new Date(startDate);
@@ -111,13 +133,19 @@ const Event_page = ({ navigation, route }) => {
         if (comment.trim() === '') {
             return;
         }
-        setLoading(true);
-    
+      
+
         try {
             const newComment = await addCommentToEvent(id, comment);
-            setComments((prevComments) => [...prevComments, newComment]);
+            setComments((prevComments) => {
+                console.log("Previous Comments:", prevComments);
+                console.log("New Comment:", newComment);
+                return [...prevComments, newComment];
+            });
+
             setComment('');
-           
+            setRefreshKey((prev) => prev + 1);
+
         } catch (err) {
             console.error(err);
         } finally {
@@ -125,24 +153,9 @@ const Event_page = ({ navigation, route }) => {
         }
     };
 
-    const handleAddUserToEvent = async () => {
-        if (isAttending) return;
 
-        setLoading(true);
-        setError(null);
 
-        try {
-            const updatedEvent = await addUserToEvent(event._id, user._id);
-            
-            setIsAttending(true);
-        } catch (err) {
-            setError('could not add user to the event', err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    
+
     // Trigger slide-up animation when modal is shown
     useEffect(() => {
         if (modalVisible) {
@@ -161,21 +174,30 @@ const Event_page = ({ navigation, route }) => {
         }
     }, [modalVisible]);
 
-    useEffect(() => {
-        const fetchEvent = async () => {
-            try {
-                const eventData = await getEventById(id);
-                setEvent(eventData);
-                console.log('Event Data:', eventData);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+    
+   
+    //I'm in button
+    const handleAddUserToEvent = async () => {
+        if (loading) return;
+        setError(null);
 
-        fetchEvent();
-    }, [id]);
+        try {
+            if (isAttending) {
+                await removeUserFromEvent(event._id);
+                setIsAttending(false);
+                console.log('User Removed from Event', event._id, user._id);
+            } else {
+                const updatedEvent = await addUserToEvent(event._id, user._id);
+                setIsAttending(true);
+                console.log('User Added to Event', event._id, user._id);
+            }
+        } catch (err) {
+            setError(`Could not update user in the event: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     if (error) {
         return (
@@ -188,11 +210,29 @@ const Event_page = ({ navigation, route }) => {
 
     if (loading) {
         return (
-            <View>
+           
                 <Text>Loading...</Text>
-            </View>
+            
         );
     }
+
+    if (loadingUser || !user) {
+        return (
+           
+                <Text>Loading...</Text>
+            
+        );
+    }
+
+    if (loadingAttend) {
+        return (
+                <Text>Loading user status...</Text>
+           
+        );
+    }
+
+    const userCount = event.attendUsers.length;
+
 
 
     const renderTabContent = () => {
@@ -258,14 +298,19 @@ const Event_page = ({ navigation, route }) => {
         } else {
             return (
                 <View style={styles.bottomBar}>
-                    <TouchableOpacity style={styles.imInButton}>
-                        <Text style={styles.imInText}
-                            onPress={handleAddUserToEvent}
-                            disabled={isAttending}
-
-                        >I'm in!</Text>
+                    {loading ? (
+                                <Text>Loading...</Text>
+                              ) : (
+                    <TouchableOpacity
+                        style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }]}
+                        onPress={handleAddUserToEvent}
+                        disabled={loading} // Disable while loading
+                    >
+                        <Text style={[styles.imInText, isAttending && { color: 'white' }]}>
+                            {isAttending ? 'You are in!' : "I'm in!"}
+                        </Text>
                         <Image source={ImInIcon} style={styles.imInIcon} />
-                    </TouchableOpacity>
+                    </TouchableOpacity>)}
                     <TouchableOpacity style={styles.shareButton}>
                         <Text style={styles.shareText}>Share</Text>
                         <Image source={ShareIcon} style={styles.shareIcon} />
@@ -284,7 +329,7 @@ const Event_page = ({ navigation, route }) => {
             <View style={styles.container}>
                 <View style={styles.imageWrapper}>
 
-                    <Image source={Event_Cover_Image} resizeMode="cover" style={styles.coverImage} />
+                    <Image source={{ uri: event.images[0] }} resizeMode="cover" style={styles.coverImage} />
                     <View style={styles.overlay} />
                     <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.backIconWrapper}>
                         <Image
@@ -334,6 +379,7 @@ const Event_page = ({ navigation, route }) => {
                 fullscreen={false}
                 transparent={true}
                 onRequestClose={() => setModalVisible(false)}
+                setRefreshKey={setRefreshKey}
             >
                 <View style={styles.modalContainer}>
                     <Animated.View
@@ -344,7 +390,7 @@ const Event_page = ({ navigation, route }) => {
                         <ScrollView style={{ marginBottom: 40, padding: 5 }}>
 
                             <View style={{ paddingRight: 45 }}>
-                                <CommentsList comments={event.comments} />
+                                <CommentsList comments={event.comments} setRefreshKey={setRefreshKey} />
                             </View>
                         </ScrollView>
 
@@ -358,9 +404,13 @@ const Event_page = ({ navigation, route }) => {
                                     value={comment}
                                     onChangeText={setComment}
                                 />
+                                {loading ? (
+                                            <Text>Loading...</Text>
+                                          ) : (
                                 <TouchableOpacity onPress={handleAddComment}>
-                                    <Image source={SendIcon} style={styles.sendIcon} />
+                                    <Image source={SendIcon} style={styles.sendIcon} setRefreshKey={setRefreshKey}/>
                                 </TouchableOpacity>
+                                          )}
                             </View>
                         </View>
 

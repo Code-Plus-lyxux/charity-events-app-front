@@ -1,8 +1,9 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import EventCard from '../../components/EventCard';
 import EventFilters from '../../components/EventFilters';
 import { getLoggedUser } from '../../api/user';
+import { useFocusEffect } from '@react-navigation/native';
 
 const MyEvents = () => {
   const [events, setEvents] = useState([]);
@@ -17,28 +18,30 @@ const MyEvents = () => {
     Past: 'Past Events',
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await getLoggedUser();
-        console.log('my events user data', userData);
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      const userData = await getLoggedUser();
+      console.log('my events user data', userData);
 
-        // Set the user data and individual event types
-        setUser(userData);
-        setEvents({
-          Hosting: userData.eventsCreated || [],
-          Upcoming: userData.eventsAttending || [],
-          Past: userData.eventsAttended || [],
-        });
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setUser(userData);
+      setEvents({
+        Hosting: userData.eventsCreated || [],
+        Upcoming: userData.eventsAttending || [],
+        Past: userData.eventsAttended || [],
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchUser();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser();
+    }, [])
+  );
 
   if (error) {
     return (
@@ -83,7 +86,7 @@ const MyEvents = () => {
           {loading ? (
             <Text>Loading...</Text>
           ) : (filteredEvents.map((event, index) => (
-            <EventCard key={index} event={event} />
+            <EventCard key={index} event={event} hostedByUser={true}/>
           )))}
         </ScrollView>
       </View>

@@ -21,7 +21,6 @@ import EmailVerification from './screens/auth/EmailVerification';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 
-
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -72,7 +71,7 @@ const TabNavigator = () => {
 const App = () => {
 
         const isTesting = true; // Set this to true for testing purposes
-        const testScreen = 'Login'; // Set this to the screen you want to test
+        const testScreen = 'Tabs'; // Set this to the screen you want to test
 
         return (
                 <NavigationContainer>
