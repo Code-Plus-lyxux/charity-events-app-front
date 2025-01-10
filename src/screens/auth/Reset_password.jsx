@@ -7,10 +7,7 @@ import CheckIcon from '../../assets/images/check_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
 import { resetPassword } from '../../api/auth';
 
-
 const Reset_password = ({ navigation }) => {
-
-
     const [newPassword, setNewPassword] = useState('');
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');

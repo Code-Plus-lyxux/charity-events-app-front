@@ -25,7 +25,7 @@ export const getLoggedUser = async () => {
       const response = await axios.get(`${API_URL}/api/user/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
-        },
+        }
       });
   
       return response.data;
@@ -36,7 +36,35 @@ export const getLoggedUser = async () => {
       } else {
         console.error('Network Error:', error.message);
       }
-      throw new Error('Failed to fetch user');
+      console.error('Failed to fetch user:', error.message);
+      throw new Error('Failed to fetch user', error.message);
     }
   };
   
+
+  export const getUserById = async (userId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+
+        if (!token) {
+            throw new Error('No token found');
+        }
+
+      const response = await axios.get(`${API_URL}/api/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      console.log("User fetched successfully:", response.data);
+      return response.data;
+    }
+    catch (error) {
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        throw new Error(error.response.data.message || "Failed to fetch user");
+      } else {
+        console.error("Network error:", error.message);
+        throw new Error("Failed to fetch user");
+      }
+    }
+  }

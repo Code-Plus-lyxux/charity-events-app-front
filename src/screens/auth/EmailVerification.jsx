@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, TextInput, Pre
 import Logo from '../../assets/images/givewell_logo.png';
 import EmailIcon from '../../assets/images/email_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
+import { sendResetOTP } from '../../api/auth';
 
 const EmailVerification = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -11,6 +12,20 @@ const EmailVerification = ({ navigation }) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     };
+
+    const handleVerification = async() => {
+        if (!validateEmail(email)) {
+            alert('Please enter a valid email address');
+            return;
+        }
+        try {
+            const response = await sendResetOTP(email);
+            console.log(response.message);
+            navigation.navigate('ForgotPassword', { email });
+          } catch (error) {
+            alert('Failed to send OTP. Please enter valid email');
+          } 
+    }
 
     return (
         <SafeAreaView>
@@ -44,7 +59,7 @@ const EmailVerification = ({ navigation }) => {
 
 
 
-                    <TouchableOpacity style={styles.Submit_Button} onPress={() => navigation.navigate('ForgotPassword')} >
+                    <TouchableOpacity style={styles.Submit_Button} onPress={handleVerification} >
                         <Text style={styles.buttonTextSubmit}>SUBMIT</Text>
                     </TouchableOpacity>
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
     Image,
     TouchableOpacity,
@@ -17,6 +18,7 @@ import {
     Alert
 } from 'react-native';
 import Comment from '../../components/Comment';
+
 import Event_Cover_Image from '../../assets/images/event-cover.png';
 import UserCountIcon from '../../assets/images/user_count_icon.png';
 import ShareIcon from '../../assets/images/export.png';
@@ -28,41 +30,42 @@ import GalleryImportIcon from '../../assets/images/gallery-import-2.png';
 import EditIcon from '../../assets/images/edit_icon_2.png';
 import SendIcon from '../../assets/images/send_icon.png';
 import BackArrowButton2 from '../../assets/images/back_arrow_icon_3.png';
-import ProfileImage1 from '../../assets/images/comments/image1.png';
-import ProfileImage2 from '../../assets/images/comments/image2.png';
-import ProfileImage3 from '../../assets/images/comments/image3.png';
-import ProfileImage4 from '../../assets/images/comments/image4.png';
-import ProfileImage5 from '../../assets/images/comments/image5.png';
-import ProfileImage6 from '../../assets/images/comments/image6.png';
 import Media_tab from './Media_tab'
 import { launchImageLibrary } from 'react-native-image-picker';
 import Event_tab from './Event_tab';
+import { getEventById } from '../../api/events';
+import { fi } from 'date-fns/locale';
+import CommentsList from '../../components/CommentsList';
+import { addCommentToEvent } from '../../api/events';
+import { addUserToEvent } from '../../api/events';
+import { removeUserFromEvent } from '../../api/events';
+import { getLoggedUser } from '../../api/user';
+import { format } from 'date-fns';
+
 
 const { height } = Dimensions.get('window');
 
 const Event_page = ({ navigation, route }) => {
     const [activeTab, setActiveTab] = useState('details');
-    const [userCount] = useState('500');
-    //const eventHostedByUser = route.params?.hostedByUser;
-    const eventHostedByUser = true;
-    const [eventName] = useState('Support Animal Welfare: Spend a Day Volunteering at the Local Shelter and Make a Difference');
-    const [dateTime] = useState('21 December 2024 at 9am to 4pm');
-    const [location] = useState('Haven Paws Animal Shelter, Kandy');
-    const [aboutEvent] = useState(
-        `Join us for a meaningful day at the local animal shelter in Kandy, where you’ll have the opportunity to support animal welfare by directly engaging with the animals in need. Spend time feeding, cleaning, and playing with the sheltered animals to help them feel loved and cared for. Your efforts will contribute to the overall well-being of the animals and help raise awareness about the importance of adoption.  Whether you're an animal enthusiast or someone looking to give back, this event will make a lasting impact on the lives of many animals. Together, we can make a real difference in the community and help create a brighter future for these deserving animals.
-
-        By volunteering, you'll also have the chance to connect with other like-minded individuals who share your passion for animal welfare. It's an excellent opportunity to learn more about the needs of animals in our community while making new friends and strengthening the bond we all share for a cause greater`
-    );
-
-
+    const eventHostedByUser = route.params?.hostedByUser;
     const [modalVisible, setModalVisible] = useState(false);
     const [comment, setComment] = useState('');
     const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(4);
     const [selectImage, setSelectImage] = useState(false);
+
     const [selectedImages, setSelectedImages] = useState([]);
     const [refreshMediaTab, setRefreshMediaTab] = useState(false);
-    const eventID = '677f536a0f5d27206ba283d1'
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQ3OTI3NiwiZXhwIjoxNzM2NTY1Njc2fQ.kUa6pxJH81aJ_u4J5t2NYyi79iEmz0-7MLl0pNRXneQ'
+    //const eventID = '677f536a0f5d27206ba283d1'
+    //const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQ3OTI3NiwiZXhwIjoxNzM2NTY1Njc2fQ.kUa6pxJH81aJ_u4J5t2NYyi79iEmz0-7MLl0pNRXneQ'
+    const [event, setEvent] = useState(null);
+    const [comments, setComments] = useState([]);
+    const [isAttending, setIsAttending] = useState(false);
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [loadingUser, setLoadingUser] = useState(true);
+    const [loadingAttend, setLoadingAttend] = useState(true);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
@@ -83,6 +86,105 @@ const Event_page = ({ navigation, route }) => {
     };
 
 
+    const { id, hostedByUser } = route.params;
+
+    console.log('eventHostedByUser', id, hostedByUser);
+
+    const statusText = {
+        0: 'Hosting',
+        1: 'Upcoming',
+        2: 'Past',
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+    
+        const fetchData = async () => {
+            try {
+                // Fetch user data
+                const userData = await getLoggedUser();
+                if (isMounted) {
+                    setUser(userData);
+                    console.log('User:', userData);
+                }
+    
+                // Fetch event data
+                const eventData = await getEventById(id);
+                if (isMounted) {
+                    setEvent(eventData);
+                }
+    
+                // Check if the user is attending the event
+                if (isMounted && eventData?.attendUsers) {
+                    const isUserAttending = eventData.attendUsers.includes(userData?._id);
+                    setIsAttending(isUserAttending);
+                    console.log('User is attending:', isUserAttending);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError(err.message);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                    setLoadingUser(false);
+                    setLoadingAttend(false);
+                }
+            }
+        };
+    
+        fetchData();
+    
+        return () => {
+            isMounted = false;
+        };
+    }, [id, refreshKey]);
+    
+
+
+
+    const formatEventDates = (startDate, endDate) => {
+        const formattedStartDate = format(new Date(startDate), "yyyy MMMM 'from' h a"); // Escaped 'from'
+        const formattedEndDate = format(new Date(endDate), "h a"); // 12 PM
+        
+        return `${formattedStartDate} to ${formattedEndDate}`;
+    };
+    
+    const startDate = "2025-02-03T09:00:00.000Z";
+    const endDate = "2025-02-03T12:00:00.000Z";
+    
+    console.log(formatEventDates(startDate, endDate));
+    
+    
+
+    // Add comment
+    const handleAddComment = async () => {
+        if (comment.trim() === '') {
+            return;
+        }
+      
+
+        try {
+            const newComment = await addCommentToEvent(id, comment);
+            setComments((prevComments) => {
+                console.log("Previous Comments:", prevComments);
+                console.log("New Comment:", newComment);
+                return [...prevComments, newComment];
+            });
+
+            setComment('');
+            setRefreshKey((prev) => prev + 1);
+
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false)
+        }
+    };
+
+
+
+
     // Trigger slide-up animation when modal is shown
     useEffect(() => {
         if (modalVisible) {
@@ -97,22 +199,80 @@ const Event_page = ({ navigation, route }) => {
                 duration: 1000,
                 useNativeDriver: true,
             }).start();
+
         }
     }, [modalVisible]);
 
+    
+   
+    //I'm in button
+    const handleAddUserToEvent = async () => {
+        if (loading) return;
+        setError(null);
+
+        try {
+            if (isAttending) {
+                await removeUserFromEvent(event._id);
+                setIsAttending(false);
+                console.log('User Removed from Event', event._id, user._id);
+            } else {
+                const updatedEvent = await addUserToEvent(event._id, user._id);
+                setIsAttending(true);
+                console.log('User Added to Event', event._id, user._id);
+            }
+            setRefreshKey((prevKey) => prevKey + 1);
+        } catch (err) {
+            setError(`Could not update user in the event: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    if (error) {
+        return (
+            <View>
+                <Text>Error: {error}</Text>
+            </View>
+        );
+    }
+
+
+    if (loading) {
+        return (
+           
+                <Text>Loading...</Text>
+            
+        );
+    }
+
+    if (loadingUser || !user) {
+        return (
+           
+                <Text>Loading...</Text>
+            
+        );
+    }
+
+    if (loadingAttend) {
+        return (
+                <Text>Loading user status...</Text>
+           
+        );
+    }
+
+    const userCount = event.attendUsers.length;
 
     const renderTabContent = () => {
         if (activeTab === 'details') {
             return (
                 <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
-                    <Event_tab dateTime={dateTime} location={location} aboutEvent={aboutEvent} />
+                    <Event_tab dateTime={formatEventDates(event.startDate, event.endDate)} location={event.location} aboutEvent={event.aboutEvent} />
                 </ScrollView>
             );
         } else if (activeTab === 'media') {
-            return <Media_tab key={refreshMediaTab} eventHostedByUser={eventHostedByUser} onSelectImage={handleSelectImage} eventID={eventID} />;
-
+            return <Media_tab eventHostedByUser={eventHostedByUser} no_of_UploadedImages={no_of_UploadedImages} onSelectImage={handleSelectImage} />;
         }
-
     };
 
 
@@ -292,11 +452,16 @@ const Event_page = ({ navigation, route }) => {
 
                     {selectImage && eventHostedByUser && (
                         <>
+
                             <TouchableOpacity style={styles.uploadButton2} onPress={() => pickImages(eventID)}>
+
+                            <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
+
                                 <Text style={styles.uploadText}>Upload</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.deleteButton, { color: '#DA4F4F', flexDirection: 'row' }]}
+
                                 onPress={handleDeleteSelectedImages}
                             >
                                 <Text style={styles.deleteText}>Delete</Text>
@@ -309,10 +474,19 @@ const Event_page = ({ navigation, route }) => {
         } else {
             return (
                 <View style={styles.bottomBar}>
-                    <TouchableOpacity style={styles.imInButton}>
-                        <Text style={styles.imInText}>I'm in!</Text>
+                    {loading ? (
+                                <Text>Loading...</Text>
+                              ) : (
+                    <TouchableOpacity
+                        style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }]}
+                        onPress={handleAddUserToEvent}
+                        disabled={loading} // Disable while loading
+                    >
+                        <Text style={[styles.imInText, isAttending && { color: 'white' }]}>
+                            {isAttending ? 'You are in!' : "I'm in!"}
+                        </Text>
                         <Image source={ImInIcon} style={styles.imInIcon} />
-                    </TouchableOpacity>
+                    </TouchableOpacity>)}
                     <TouchableOpacity style={styles.shareButton}>
                         <Text style={styles.shareText}>Share</Text>
                         <Image source={ShareIcon} style={styles.shareIcon} />
@@ -331,7 +505,8 @@ const Event_page = ({ navigation, route }) => {
             <View style={styles.container}>
                 <View style={styles.imageWrapper}>
 
-                    <Image source={Event_Cover_Image} resizeMode="cover" style={styles.coverImage} />
+
+                    <Image source={{ uri: event.images[0] }} resizeMode="cover" style={styles.coverImage} />
                     <View style={styles.overlay} />
                     <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.backIconWrapper}>
                         <Image
@@ -351,9 +526,10 @@ const Event_page = ({ navigation, route }) => {
                     )}
                     <Text style={styles.userCount}>{userCount}</Text>
                     <Image source={UserCountIcon} resizeMode="cover" style={styles.icon} />
-                    <Text style={styles.eventName}>{eventName}</Text>
+
+                    <Text style={styles.eventName}>{event.eventName}</Text>
                     <View style={styles.statusWrapper}>
-                        <Text style={styles.statusText}>Upcoming</Text>
+                        <Text style={styles.statusText}>{statusText[event.status] || 'Unknown'}</Text>
                     </View>
                 </View>
                 <View style={styles.tabWrapper}>
@@ -381,6 +557,7 @@ const Event_page = ({ navigation, route }) => {
                 fullscreen={false}
                 transparent={true}
                 onRequestClose={() => setModalVisible(false)}
+                setRefreshKey={setRefreshKey}
             >
                 <View style={styles.modalContainer}>
                     <Animated.View
@@ -391,15 +568,11 @@ const Event_page = ({ navigation, route }) => {
                         <ScrollView style={{ marginBottom: 40, padding: 5 }}>
 
                             <View style={{ paddingRight: 45 }}>
-                                <Comment profileImage={ProfileImage1} name='Lucifer Barret' commentText='Such an amazing event! Excited to participate and contribute. Thank you for organizing this. Let’s make a positive impact together!' />
-                                <Comment profileImage={ProfileImage2} name='Ayesha Perera' commentText='This event is such a wonderful initiative! Excited to participate, meet amazing people, and contribute to a meaningful cause. Let’s work together and make it truly impactful!' />
-                                <Comment profileImage={ProfileImage3} name='Nuwan Silva' commentText='Looking forward to this! Great initiative for the community.' />
-                                <Comment profileImage={ProfileImage4} name='Kavindi Jayasekara' commentText='Such a meaningful event! Excited to join and help create a positive impact for everyone involved' />
-                                <Comment profileImage={ProfileImage5} name='Amal Fernando' commentText='Great initiative!' />
-                                <Comment profileImage={ProfileImage6} name='Tharushi Gamage' commentText='This event is truly inspiring! Looking forward to participating and contributing to such a meaningful cause together.' />
+                                <CommentsList comments={event.comments} setRefreshKey={setRefreshKey} />
                             </View>
                         </ScrollView>
 
+                        {/* Add comment section */}
                         <View style={styles.bottomBar}>
                             <View style={styles.inputWrapper}>
                                 <TextInput
@@ -409,9 +582,13 @@ const Event_page = ({ navigation, route }) => {
                                     value={comment}
                                     onChangeText={setComment}
                                 />
-                                <TouchableOpacity onPress={() => console.log('Send comment', comment)}>
-                                    <Image source={SendIcon} style={styles.sendIcon} />
+                                {loading ? (
+                                            <Text>Loading...</Text>
+                                          ) : (
+                                <TouchableOpacity onPress={handleAddComment}>
+                                    <Image source={SendIcon} style={styles.sendIcon} setRefreshKey={setRefreshKey}/>
                                 </TouchableOpacity>
+                                          )}
                             </View>
                         </View>
 

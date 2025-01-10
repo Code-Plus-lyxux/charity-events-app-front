@@ -21,42 +21,50 @@ const EventCard = (props) => {
   return (
     <View style={styles.card}>
       <View>
-        <Pressable onPress={() => navigation.navigate('EventPage', { hostedByUser: props.hostedByUser })} style={styles.container}>
-          <Text style={styles.title} numberOfLines={2}>{props.event.eventName}</Text>
+  
+          <Pressable
+            onPress={() => navigation.navigate('EventPage', { 
+              id: props.event._id , 
+              hostedByUser: props.hostedByUser 
+            })}
+            style={styles.container}
+          >
 
-          <View style={styles.locationDateContainer}>
-            <View style={styles.locationContainer}>
-              <Image source={icons.LocationIcon} style={styles.icon} />
-              <Text style={styles.location}>{props.event.location}</Text>
+            <Text style={styles.title} numberOfLines={2}>{props.event.eventName}</Text>
+
+            <View style={styles.locationDateContainer}>
+              <View style={styles.locationContainer}>
+                <Image source={icons.LocationIcon} style={styles.icon} />
+                <Text style={styles.location}>{props.event.location}</Text>
+              </View>
+
+              <View style={styles.dateContainer}>
+                <Image source={icons.DateIcon} style={styles.icon} />
+                <Text style={styles.date}>{formatDate(props.event.startDate)}</Text>
+              </View>
             </View>
 
-            <View style={styles.dateContainer}>
-              <Image source={icons.DateIcon} style={styles.icon} />
-              <Text style={styles.date}>{formatDate(props.event.startDate)}</Text>
+            <View style={styles.imageContainer}>
+              {/* Use the first image from the images array */}
+              <Image
+                source={{ uri: props.event.images[0] }} // Fetch first image from images array
+                style={styles.image}
+                resizeMode="cover"
+              />
+              <View style={styles.handContainer}>
+                <Pressable onPress={toggleHandIcon}>
+                  <Image
+                    style={styles.icon}
+                    source={isHandBold ? icons.HandBold : icons.Hand}
+                    resizeMode="contain"
+                  />
+
+                </Pressable>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.imageContainer}>
-            {/* Use the first image from the images array */}
-            <Image
-              source={{ uri: props.event.images[0] }} // Fetch first image from images array
-              style={styles.image}
-              resizeMode="cover"
-            />
-            <View style={styles.handContainer}>
-              <Pressable onPress={toggleHandIcon}>
-                <Image
-                  style={styles.icon}
-                  source={isHandBold ? icons.HandBold : icons.Hand} 
-                  resizeMode="contain"
-                />
-
-              </Pressable>
-            </View>
-          </View>
-
-          <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">{props.event.aboutEvent}</Text>
-        </Pressable>
+            <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">{props.event.aboutEvent}</Text>
+          </Pressable>
       </View>
     </View>
   );

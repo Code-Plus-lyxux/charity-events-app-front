@@ -13,9 +13,8 @@ const Sign_up = ({ navigation }) => {
   
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('Doe');
-    const [mobile, setMobile] = useState('1234567890');
+    const [fullName, setFullName] = useState('');
+    //const [mobile, setMobile] = useState('1234567890');
     const [profileImage, setProfileImage] = useState('');
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,7 +28,7 @@ const Sign_up = ({ navigation }) => {
 
     
     const handleSignUp = async () => {
-        if (!firstName || !email || !password || !confirmPassword) {
+        if (!fullName || !email || !password || !confirmPassword) {
           alert('Please fill out all fields');
           return;
         }
@@ -45,7 +44,7 @@ const Sign_up = ({ navigation }) => {
         }
       
         try {
-          const userData = { firstName, lastName, email, password, mobile, profileImage };
+          const userData = { fullName, email, password, profileImage };
           console.log(userData);
           const response = await registerUser(userData); 
           console.log(response);
@@ -92,8 +91,8 @@ const Sign_up = ({ navigation }) => {
                             style={styles.input}
                             placeholderTextColor="#888"
                             placeholder="Full Name"
-                            value={firstName}
-                            onChangeText={(text) => setFirstName(text)}
+                            value={fullName}
+                            onChangeText={(text) => setFullName(text)}
                             keyboardType="names"
                             autoCapitalize="none"
                         />
