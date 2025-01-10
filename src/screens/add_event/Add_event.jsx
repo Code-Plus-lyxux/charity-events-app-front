@@ -9,7 +9,7 @@ import { LocationDetail } from '../../components/LocationDetail';
 import { AboutEvent } from '../../components/AboutEvent';
 import DateTimePickerComponent from '../../components/DateTimePicker';
 import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUploadPortal';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Add_event = ({navigation}) => {
 
@@ -25,6 +25,8 @@ const Add_event = ({navigation}) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching,setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Kandy','Kandy,Sri Lanka']);
+    const [token, setToken] = useState(null);
+     const [userId, setUserId] = useState(null);
 
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
@@ -36,8 +38,27 @@ const Add_event = ({navigation}) => {
         }));
     };
 
+    useEffect(() => {
+        const getToken = async () => {
+          try {
+            const storedToken = await AsyncStorage.getItem('token');
+            const storedUserId = await AsyncStorage.getItem('userId');
+            
+            if (storedToken) setToken(storedToken);
+            if (storedUserId) setUserId(storedUserId);
+          } catch (error) {
+            console.log('Error fetching token:', error);
+          }
+        };
+    
+        getToken();
+      }, []);
+    console.log('Add event:',token);
+    
+
     const submitEventDetails = async () => {
         // Check for missing details
+        
         const missingDetails = [];
         if (!eventDetails.eventName) missingDetails.push('Event Name');
         if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
@@ -73,7 +94,7 @@ const Add_event = ({navigation}) => {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`, // Use backticks for interpolation
+                        'Authorization': `Bearer ${token}`, // Use backticks for interpolation
                     },
                 }
             );
@@ -83,7 +104,7 @@ const Add_event = ({navigation}) => {
             Alert.alert('Success', 'Event created successfully!', [
                 {
                     text: 'OK',
-                    onPress: () => navigation.navigate('EventPage'), // Navigate to the Event page
+                    onPress: () => navigation.navigate('Tabs'), // Navigate to the Event page
                 },
             ]);
         } catch (error) {

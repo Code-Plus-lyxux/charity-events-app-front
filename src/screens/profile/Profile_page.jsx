@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Modal, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Modal, Animated,Alert } from 'react-native';
 import user_image from '../../assets/images/user_image.png';
 import edit_icon from '../../assets/images/edit_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
@@ -8,22 +8,61 @@ import { ProfileDetail } from '../../components/ProfileDetail';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import axios from 'axios';
 import * as ImagePicker from 'react-native-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getLoggedUser } from '../../api/user';
 //import ImageCropPicker from 'react-native-image-crop-picker';
 
 
 
 const Profile_page = ({ navigation }) => {
-    const [name, setName] = useState('Lucifer Barret');
-    const [email, setEmail] = useState('lucilebarret@gmail.com');
-    const [about, setAbout] = useState('Student');
-    const [location, setLocation] = useState('Galle');
-    const [phoneNumber, setPhoneNumber] = useState('0714516503');
+    const [user, setUser] = useState({
+        name: 'Lucifer Barret',
+        email: 'lucilebarret@gmail.com',
+        about: 'Student',
+        location: 'Galle',
+        phoneNumber: '0714516503',
+      });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentDetail, setCurrentDetail] = useState({ property: '', value: '' });
     const [newValue, setNewValue] = useState('');
     const [imageUri, setImageUri] = useState(null);// Set default image
+    
+    
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const submitProfileDetails = async () => {
+    const fetchUser = async () => {
+        try {
+        setLoading(true);
+        setError(null);
+
+        // Replace `getLoggedUser()` with actual API call
+        const userData = await getLoggedUser();
+
+        // Handle successful response
+        setUser(prevUser => ({
+            ...prevUser,  // Preserve existing fields
+            name: userData.fullName,
+            about: userData.about,
+            location: userData.location,
+            email: userData.email,
+            phoneNumber: userData.mobile
+        }));
+
+        } catch (error) {
+        console.error('Error fetching user:', error);
+        setError('Failed to fetch user data.');
+        } finally {
+        setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+
+    const submitProfileDetails = async (name,email,about,location,phoneNumber) => {
         const formattedProfileDetails = {
             name,
             email,
@@ -31,7 +70,7 @@ const Profile_page = ({ navigation }) => {
             location,
             phoneNumber,
         };
-    
+        fullName, mobile, password,about,location
         try {
             const response = await axios.put(
                 'http://10.0.3.2:5001/api/user/profile', // Update the endpoint as needed
@@ -64,19 +103,34 @@ const Profile_page = ({ navigation }) => {
     const handleSave = () => {
         switch (currentDetail.property) {
             case 'Name':
-                setName(newValue);
+                setUser(prevUser => ({
+                    ...prevUser,
+                    name: newValue
+                }));
                 break;
             case 'Email':
-                setEmail(newValue);
+                setUser(prevUser => ({
+                    ...prevUser,
+                    email: newValue
+                }));
                 break;
             case 'About':
-                setAbout(newValue);
+                setUser(prevUser => ({
+                    ...prevUser,
+                    about: newValue
+                }));
                 break;
             case 'Location':
-                setLocation(newValue);
+                setUser(prevUser => ({
+                    ...prevUser,
+                    location: newValue
+                }));
                 break;
             case 'Phone Number':
-                setPhoneNumber(newValue);
+                setUser(prevUser => ({
+                    ...prevUser,
+                    phoneNumber: newValue
+                }));
                 break;
         }
         setIsModalVisible(false);
@@ -115,12 +169,33 @@ const Profile_page = ({ navigation }) => {
         });
     };
     
-    
+    const handleLogout = () => {
+        Alert.alert(
+            'Logout Confirmation',
+            'Do you want to logout from your profile?',
+            [
+                
+                {
+                    text: 'Yes',
+                    onPress: () => navigation.navigate('Login'),
+                },
+                {
+                    text: 'No',
+                    onPress: () => console.log('Logout cancelled'),
+                    style: 'cancel',
+                },
+                
+            ],
+            { cancelable: true }
+        );
+    };
 
     return (
-        <SafeAreaView>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%', backgroundColor: 'white' }}>
-                <BackArrowButton ReturnPage="Tabs" />
+        <SafeAreaView style={{ minHeight: '100%', backgroundColor: 'white' }}>
+            <BackArrowButton ReturnPage="UserProfile" />
+            <ScrollView showsVerticalScrollIndicator={false} >
+                
+                {!loading &&
                 <View style={styles.container}>
                     <Text style={styles.TitleText}>Profile</Text>
                     <Image 
@@ -131,17 +206,17 @@ const Profile_page = ({ navigation }) => {
                         <Image source={edit_icon} resizeMode="contain" style={styles.iconStyle} />
                     </TouchableOpacity>
 
-                    <Text style={styles.NameText}>{name}</Text>
-                    <Text style={styles.EmailText}>{email}</Text>
-                    <ProfileDetail property="Name" value={name} onPress={() => handleProfileDetailPress('Name', name)} />
-                    <ProfileDetail property="About" value={about} onPress={() => handleProfileDetailPress('About', about)} />
-                    <ProfileDetail property="Location" value={location} onPress={() => handleProfileDetailPress('Location', location)} />
-                    <ProfileDetail property="Phone Number" value={phoneNumber} onPress={() => handleProfileDetailPress('Phone Number', phoneNumber)} />
+                    <Text style={styles.NameText}>{user.name}</Text>
+                    <Text style={styles.EmailText}>{user.email}</Text>
+                    <ProfileDetail property="Name" value={user.name} onPress={() => handleProfileDetailPress('Name', user.name)} />
+                    <ProfileDetail property="About" value={user.about} onPress={() => handleProfileDetailPress('About', user.about)} />
+                    <ProfileDetail property="Location" value={user.location} onPress={() => handleProfileDetailPress('Location', user.location)} />
+                    <ProfileDetail property="Phone Number" value={user.phoneNumber} onPress={() => handleProfileDetailPress('Phone Number', user.phoneNumber)} />
 
-                    <TouchableOpacity style={styles.Logout_Button} onPress={() => navigation.navigate('ResetPassword')}>
+                    <TouchableOpacity style={styles.Logout_Button} onPress={handleLogout}>
                         <Text style={styles.buttonTextLogout}>LOGOUT</Text>
                     </TouchableOpacity>
-                </View>
+                </View>}
 
                 {/* Modal for Editing Details */}
                 <Modal
@@ -218,13 +293,14 @@ const styles = StyleSheet.create({
     },
     Logout_Button: {
         backgroundColor: '#DA4F4F',
-        width: '55%',
-        height: 45,
+        width: '50%',
+        height: 35,
         paddingHorizontal: 15,
         borderRadius: 60,
         borderColor: '#DA4F4F',
         borderWidth: 1,
-        marginVertical: 10,
+        marginTop:10,
+        marginBottom: 20,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
@@ -274,8 +350,8 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     circularImg:{
-        width:180,
-        height:180,
+        width:100,
+        height:100,
         borderRadius:90,
         marginBottom:10,
         marginTop:10
