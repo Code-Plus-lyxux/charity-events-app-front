@@ -449,19 +449,14 @@ const Event_page = ({ navigation, route }) => {
                             <Text style={styles.uploadText}>Upload</Text>
                         </TouchableOpacity>
                     )}
-
+    
                     {selectImage && eventHostedByUser && (
                         <>
-
-                            <TouchableOpacity style={styles.uploadButton2} onPress={() => pickImages(eventID)}>
-
                             <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
-
                                 <Text style={styles.uploadText}>Upload</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.deleteButton, { color: '#DA4F4F', flexDirection: 'row' }]}
-
                                 onPress={handleDeleteSelectedImages}
                             >
                                 <Text style={styles.deleteText}>Delete</Text>
@@ -475,18 +470,19 @@ const Event_page = ({ navigation, route }) => {
             return (
                 <View style={styles.bottomBar}>
                     {loading ? (
-                                <Text>Loading...</Text>
-                              ) : (
-                    <TouchableOpacity
-                        style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }]}
-                        onPress={handleAddUserToEvent}
-                        disabled={loading} // Disable while loading
-                    >
-                        <Text style={[styles.imInText, isAttending && { color: 'white' }]}>
-                            {isAttending ? 'You are in!' : "I'm in!"}
-                        </Text>
-                        <Image source={ImInIcon} style={styles.imInIcon} />
-                    </TouchableOpacity>)}
+                        <Text>Loading...</Text>
+                    ) : (
+                        <TouchableOpacity
+                            style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }]}
+                            onPress={handleAddUserToEvent}
+                            disabled={loading} // Disable while loading
+                        >
+                            <Text style={[styles.imInText, isAttending && { color: 'white' }]}>
+                                {isAttending ? 'You are in!' : "I'm in!"}
+                            </Text>
+                            <Image source={ImInIcon} style={styles.imInIcon} />
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity style={styles.shareButton}>
                         <Text style={styles.shareText}>Share</Text>
                         <Image source={ShareIcon} style={styles.shareIcon} />
@@ -498,6 +494,7 @@ const Event_page = ({ navigation, route }) => {
             );
         }
     };
+    
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -906,4 +903,7 @@ const styles = StyleSheet.create({
 
 
 export default Event_page;
+
+
+
 

@@ -17,23 +17,33 @@ export const registerUser = async (userData) => {
 export const loginUser = async (credentials) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, credentials);
-    const {token, userId} = response.data; 
+    console.log('API Response:', response.data);
+    const { token, userId } = response.data;
 
-    await AsyncStorage.setItem('token', token);
-    await AsyncStorage.setItem('userId', userId);
-
-    console.log('Token:', token, 'user::', userId);
+    try {
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('userId', userId);
+    } catch (error) {
+      console.error('Failed to store data in AsyncStorage:', error);
+      throw new Error('Unable to store login details. Please try again.');
+    }
+    console.log('Token:', token, 'User ID:', userId);
 
     return response.data;
-    
   } catch (error) {
     if (error.response) {
+      console.error('Server Error:', error.response.data.message);
       throw new Error(error.response.data.message);
+    } else if (error.request) {
+      console.error('Network Error:', error.message);
+      throw new Error('Network error. Please check your connection.');
     } else {
-      throw new Error('An error occurred while logging in');
+      console.error('Error:', error.message);
+      throw new Error('An unexpected error occurred.');
     }
   }
 };
+
 
 
 
