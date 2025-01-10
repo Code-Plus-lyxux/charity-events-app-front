@@ -1,32 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, TextInput, Pressable, TouchableOpacity, Modal, Animated, FlatList, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, TextInput, Pressable, TouchableOpacity, Modal, Animated, FlatList, Alert } from 'react-native';
 import BackArrowIcon from '../../assets/images/back_arrow_icon_2.png';
-import GalleryImportIcon from '../../assets/images/gallery-import.png';
-import CalenderIcon from '../../assets/images/calendar.png';
 import SearchNormalIcon from '../../assets/images/search-normal.png';
 import SearchPressedIcon from '../../assets/images/search-pressed.png';
 import { EventDetail } from '../../components/EventDetail';
 import { LocationDetail } from '../../components/LocationDetail';
 import { AboutEvent } from '../../components/AboutEvent';
 import DateTimePickerComponent from '../../components/DateTimePicker';
-import { CoverPhotoUploadPortal } from '../../components/CoverPhotoUploadPortal';
+import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUploadPortal';
 import { UploadCover } from '../../components/UploadCover';
 import Hero from '../../assets/images/event-cover.png';
+import axios from 'axios';
 
 
-const EditEvent = ({ navigation }) => {
-    const [eventName, setEventName] = useState('Support Animal Welfare: Spend a Day Volunteering at the Local Shelter and Make a Difference');
-    const [startDateTime, setStartDateTime] = useState('2025-01-01T10:00:00');
-    const [endDateTime, setEndDateTime] = useState('2025-01-01T15:00:00');
-    const [location, setLocation] = useState('Kandy, Sri Lanka');
-    const [aboutEvent, setAboutEvent] = useState('Join us for a meaningful day at the local animal shelter in Kandy, where you’ll have the opportunity to support animal welfare by directly engaging with the animals in need. Spend time feeding, cleaning, and playing with the sheltered animals to help them feel loved and cared for. Your efforts will contribute to the overall well-being of the animals and help raise awareness about the importance of adoption. ');
+const EditEvent = ({ navigation,route }) => {
+     const [eventDetails, setEventDetails] = useState({
+            backgroundImage: '',
+            eventName: '',
+            startDateTime: '',
+            endDateTime: '',
+            location: '',
+            aboutEvent: '',
+            status: '0'
+        });  
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching, setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Kandy', 'Kandy,Sri Lanka']);
-
+    //const eventID = route.params?.eventID;
+    const eventID = '677f59ac0f5d27206ba283d9'
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
+    
 
+    useEffect(() => {
+        if (eventID) {
+            getEventById();
+        }
+    }, [eventID]);
 
     // Trigger slide-up animation when modal is shown
     useEffect(() => {
@@ -63,9 +73,117 @@ const EditEvent = ({ navigation }) => {
     };
 
     const handleSuggestionSelect = (suggestion) => {
-        setLocation(suggestion);
+        setEventDetails((prevDetails) => ({
+            ...prevDetails,
+            location: suggestion, // Set the new location value
+        }));
         setIsModalVisible(false);
     };
+
+    const getEventById = async () => {
+        try {
+            const response = await axios.get(
+                `http://10.0.3.2:5001/api/events/${eventID}`,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`,
+                    },
+                }
+            );
+    
+            const data = response.data;
+            
+
+            // Map the data to match your state structure if necessary
+            setEventDetails({
+                backgroundImage: data.backgroundImage || '',
+                eventName: data.eventName || '',
+                startDateTime: data.startDate || '',
+                endDateTime: data.endDate || '',
+                location: data.location || '',
+                aboutEvent: data.aboutEvent || '',
+                status: data.status?.toString() || '0', // Convert status to string for the form
+            });
+    
+            console.log('Fetched event:', data);
+        } catch (error) {
+            console.error('Error fetching event:', error.response ? error.response.data : error.message);
+        }
+    };
+    
+
+    const updateEventDetails = async () => {
+        // Check for missing details
+        const missingDetails = [];
+        if (!eventDetails.eventName) missingDetails.push('Event Name');
+        if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
+        if (!eventDetails.endDateTime) missingDetails.push('End Date/Time');
+        if (!eventDetails.location) missingDetails.push('Location');
+        if (!eventDetails.aboutEvent) missingDetails.push('About Event');
+    
+        if (missingDetails.length > 0) {
+            // Show alert for missing details
+            Alert.alert(
+                'Missing Details',
+                `Please add the following details:\n${missingDetails.join('\n')}`,
+                [{ text: 'OK', style: 'cancel' }]
+            );
+            return; // Exit function if validation fails
+        }
+    
+        // Format event details for the API
+        const formattedEventDetails = {
+            ...eventDetails,
+            eventId: eventID, // Include the eventId explicitly
+            startDate: eventDetails.startDateTime, // Map startDateTime to startDate
+            endDate: eventDetails.endDateTime, // Map endDateTime to endDate
+            backgroundImage: eventDetails.backgroundImage || null, // Handle null backgroundImage
+            status: parseInt(eventDetails.status, 10), // Ensure status is a number
+        };
+    
+        try {
+            const response = await axios.put(
+                'http://10.0.3.2:5001/api/events/update',
+                formattedEventDetails,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`, // Replace YOUR_ACCESS_TOKEN with the actual token
+                    },
+                }
+            );
+            console.log('Event updated successfully:', response.data);
+    
+            // Show success alert and navigate to EventPage with route parameter
+            Alert.alert('Success', 'Event updated successfully!', [
+                {
+                    text: 'OK',
+                    onPress: () => navigation.navigate('EventPage', { hostedByUser: true }),
+                },
+            ]);
+        } catch (error) {
+            console.error(
+                'Error updating event:',
+                error.response ? error.response.data : error.message
+            );
+    
+            // Show error alert for API issues
+            Alert.alert(
+                'Error',
+                error.response ? error.response.data.message || 'Failed to update event' : 'Something went wrong',
+                [{ text: 'OK', style: 'cancel' }]
+            );
+        }
+    };
+    
+    const updateBackgroundImage = (uri) => {
+        setEventDetails((prevDetails) => ({
+          ...prevDetails,
+          backgroundImage: uri,
+        }));
+        
+      };
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>
@@ -86,16 +204,48 @@ const EditEvent = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
             >
             
-                    <View style={styles.container}>
-                       
-                        <UploadCover source={Hero} />
-                        <EventDetail property='Event Name' value={eventName} onChangeText={(text) => setEventName(text)} />
-                        <DateTimePickerComponent property='Start date and time' value={startDateTime} start_or_end='Start' onChangeDateTime={(datetime) => setStartDateTime(datetime.toISOString())} />
-                        <DateTimePickerComponent property='End date and time' value={endDateTime} start_or_end='End' onChangeDateTime={(datetime) => setEndDateTime(datetime.toISOString())} />
-                        <LocationDetail property='Location' value={location} onPress={() => setIsModalVisible(true)} />
-                        <AboutEvent property='About Event' value={aboutEvent} onChangeText={(text) => setAboutEvent(text)} />
-                   
-                    </View>
+                <View style={styles.container}>
+                    <BackgroundImageUploadPortal onBackgroundImageChange={updateBackgroundImage} previousBackgroundImage={eventDetails.backgroundImage}/>
+                    <EventDetail 
+                        property="Event Name" 
+                        value={eventDetails.eventName} 
+                        onChangeText={(text) => 
+                            setEventDetails((prev) => ({ ...prev, eventName: text }))
+                        } 
+                    />
+                    <DateTimePickerComponent 
+                        property="Start date and time" 
+                        value={eventDetails.startDateTime} 
+                        start_or_end="Start" 
+                        onChangeDateTime={(datetime) => 
+                            setEventDetails((prev) => ({ ...prev, startDateTime: datetime.toISOString() }))
+                        } 
+                    />
+                    <DateTimePickerComponent 
+                        property="End date and time" 
+                        value={eventDetails.endDateTime} 
+                        start_or_end="End" 
+                        onChangeDateTime={(datetime) => 
+                            setEventDetails((prev) => ({ ...prev, endDateTime: datetime.toISOString() }))
+                        } 
+                    />
+                    <LocationDetail 
+                        property="Location" 
+                        value={eventDetails.location} 
+                        onPress={() => setIsModalVisible(true)} 
+                        onChangeLocation={(location) => 
+                            setEventDetails((prev) => ({ ...prev, location }))
+                        }
+                    />
+                    <AboutEvent 
+                        property="About Event" 
+                        value={eventDetails.aboutEvent} 
+                        onChangeText={(text) => 
+                            setEventDetails((prev) => ({ ...prev, aboutEvent: text }))
+                        } 
+                    />
+                </View>
+
         
             </ScrollView>
 
@@ -128,7 +278,7 @@ const EditEvent = ({ navigation }) => {
                                 >
                                     <TextInput
                                         style={[styles.locationInput, { flex: 1 }]}
-                                        value={location}
+                                        value={eventDetails.location}
                                         onChangeText={(text) => {
                                             setLocation(text);
                                             setActiveLocationSearching(true);
@@ -168,7 +318,7 @@ const EditEvent = ({ navigation }) => {
 
 
             <View style={styles.bottomContainer}>
-                <TouchableOpacity style={styles.Edit_Event_Button} onPress={''}>
+                <TouchableOpacity style={styles.Edit_Event_Button} onPress={()=>updateEventDetails()}>
                     <Text style={styles.buttonTextEditEvent}>Save Details</Text>
                 </TouchableOpacity>
             </View>

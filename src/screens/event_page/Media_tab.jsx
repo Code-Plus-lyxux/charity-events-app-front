@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import {
     Image,
     Text,
@@ -6,32 +6,80 @@ import {
     View,
     StyleSheet,
     TouchableOpacity,
+    Alert
 } from 'react-native';
 
 import TickCircleIcon from '../../assets/images/tick-circle.png';
+import axios from 'axios';
 
-const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) => {
-    const uploadedImages = [
-        require('../../assets/images/uploadImages/image1.png'),
-        require('../../assets/images/uploadImages/image2.png'),
-        require('../../assets/images/uploadImages/image3.png'),
-        require('../../assets/images/uploadImages/image4.png'),
-        require('../../assets/images/uploadImages/image5.png'),
-        require('../../assets/images/uploadImages/image6.png'),
-    ];
+const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
     
+    
+    // const uploadedImages = [
+    //     require('../../assets/images/uploadImages/image1.png'),
+    //     require('../../assets/images/uploadImages/image2.png'),
+    //     require('../../assets/images/uploadImages/image3.png'),
+    //     require('../../assets/images/uploadImages/image4.png'),
+    //     require('../../assets/images/uploadImages/image5.png'),
+    //     require('../../assets/images/uploadImages/image6.png'),
+    // ];
+    
+    
+    const [uploadedImages, setUploadedImages] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
     const [selectButtonStatus, setSelectButtonStatus] = useState('select');
     const [selectButtonPressed, setSelectButtonPressed] = useState(false);
+    const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(0);
+    const [loading, setLoading] = useState(true);
 
-    const toggleImageSelection = (index) => {
+    const eventID = '677f536a0f5d27206ba283d1';
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQ3OTI3NiwiZXhwIjoxNzM2NTY1Njc2fQ.kUa6pxJH81aJ_u4J5t2NYyi79iEmz0-7MLl0pNRXneQ'
+
+
+    useEffect(() => {
+        if (eventID) {
+            console.log("inside use effect---------------------")
+            getEventImagesById(eventID);
+        }
+    }, [eventID]);
+
+    const getEventImagesById = async (eventID) => {
+        try {
+          const response = await axios.get(
+            `http://10.0.3.2:5001/api/events/${eventID}`,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+      
+          const data = response.data;
+          setUploadedImages(data.images);
+          setLoading(false);
+          console.log('response:',data.images) // Update state with fetched images
+          console.log('uploaded images:',uploadedImages)
+          set_No_of_UploadedImages(data.images.length); // Update count of uploaded images
+      
+          console.log('Fetched event:', data);
+        } catch (error) {
+          console.error(
+            'Error fetching event:',
+            error.response ? error.response.data : error.message
+          );
+        }
+      };
+      
+
+    const toggleImageSelection = (url) => {
         setSelectedImages((prevSelectedImages) => {
-            const updatedSelectedImages = prevSelectedImages.includes(index)
-                ? prevSelectedImages.filter((i) => i !== index) 
-                : [...prevSelectedImages, index]; 
+            const updatedSelectedImages = prevSelectedImages.includes(url)
+                ? prevSelectedImages.filter((i) => i !== url) 
+                : [...prevSelectedImages, url]; 
     
             // Call onSelectImage with the updated state length immediately
-            onSelectImage(updatedSelectedImages.length); 
+            onSelectImage(updatedSelectedImages); 
     
             return updatedSelectedImages;
         });
@@ -50,6 +98,17 @@ const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) 
             return !prev;
         });
     };
+
+    // const deleteSelectedImages = () => {
+    //     // Perform deletion logic here
+    //     console.log('Deleting selected images:', selectedImages);
+    //     // Example: Remove selected images from uploadedImages
+    //     setUploadedImages((prevImages) =>
+    //         prevImages.filter((image) => !selectedImages.includes(image))
+    //     );
+    //     setSelectedImages([]);
+    //     onDeleteSelectedImages();
+    // };
 
     return (
         <ScrollView>
@@ -73,13 +132,14 @@ const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) 
                                     </Text>
                                 </TouchableOpacity>
                             
+                            {!loading &&
                             <View style={styles.collageContainer}>
                                 {uploadedImages.slice(0, no_of_UploadedImages).map((image, index) => (
                                     <TouchableOpacity
                                     key={index}
                                     onPress={() => {
                                         if (selectButtonPressed) {
-                                            toggleImageSelection(index);
+                                            toggleImageSelection(image);
                                             onSelectImage(selectedImages.length > 0);
                                             console.log('array length :'+selectedImages.length +'  array:' +selectedImages);
                                         }
@@ -88,11 +148,11 @@ const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) 
                                     style={styles.imageWrapper}
                                 >
                                     <Image
-                                        source={image}
+                                        source={{ uri: image }} 
                                         style={styles.uploadedImage}
                                         resizeMode="cover"
                                     />
-                                    {selectButtonPressed && selectedImages.includes(index) && (
+                                    {selectButtonPressed && selectedImages.includes(image) && (
                                         <Image
                                             source={TickCircleIcon}
                                             style={styles.tickIcon}
@@ -100,7 +160,7 @@ const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) 
                                     )}
                                 </TouchableOpacity>
                                 ))}
-                            </View>
+                            </View>}
                         </>
                     )
                 ) : (
@@ -108,33 +168,38 @@ const Media_tab = ({ eventHostedByUser, no_of_UploadedImages, onSelectImage  }) 
                     <Text style={styles.mediaText}>No media to show</Text>
                     ):(
                         <View style={styles.collageContainer}>
-                                {uploadedImages.slice(0, no_of_UploadedImages).map((image, index) => (
-                                    <TouchableOpacity
-                                    key={index}
-                                    onPress={() => {
-                                        if (selectButtonPressed) {
-                                            toggleImageSelection(index);
-                                            onSelectImage(selectedImages.length > 0);
-                                            console.log('array length :'+selectedImages.length +'  array:' +selectedImages);
-                                        }
-                                    }}
-                                    activeOpacity={selectButtonPressed ? 0.7 : 1}
-                                    style={styles.imageWrapper}
-                                >
-                                    <Image
-                                        source={image}
-                                        style={styles.uploadedImage}
-                                        resizeMode="cover"
-                                    />
-                                    {selectButtonPressed && selectedImages.includes(index) && (
-                                        <Image
-                                            source={TickCircleIcon}
-                                            style={styles.tickIcon}
-                                        />
-                                    )}
-                                </TouchableOpacity>
-                                ))}
-                        </View>
+                        console.log(uploadedImages);
+                        {uploadedImages.slice(0, no_of_UploadedImages).map((image, index) => (
+                          <TouchableOpacity
+                            key={index}
+                            onPress={() => {
+                              if (selectButtonPressed) {
+                                toggleImageSelection(index);
+                                onSelectImage(selectedImages.length > 0);
+                                console.log(
+                                  'array length :' + selectedImages.length + '  array:' + selectedImages
+                                );
+                              }
+                            }}
+                            activeOpacity={selectButtonPressed ? 0.7 : 1}
+                            style={styles.imageWrapper}
+                          >
+                            <Image
+                              source={{ uri: image }} // Pass the URI properly here
+                              style={styles.uploadedImage}
+                              resizeMode="cover"
+                              onError={(error) => console.log('Image load error:', error.nativeEvent.error)}
+                            />
+                            {selectButtonPressed && selectedImages.includes(index) && (
+                              <Image
+                                source={TickCircleIcon}
+                                style={styles.tickIcon}
+                              />
+                            )}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    
                     )
                 )}
             </View>
@@ -186,7 +251,7 @@ const styles = StyleSheet.create({
     },
     selectButtonContainer: {
         paddingHorizontal: '6%',
-        width: '22%',
+        width: '24%',
         alignSelf:'flex-end'
     },
     selectText: {

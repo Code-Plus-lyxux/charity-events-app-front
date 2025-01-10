@@ -1,18 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Image, TouchableOpacity, Text, SafeAreaView, ScrollView, View, StyleSheet, Dimensions, Modal, TextInput, KeyboardAvoidingView, Platform, Animated, PanResponder } from 'react-native';
+
+import {
+    Image,
+    TouchableOpacity,
+    Text,
+    SafeAreaView,
+    ScrollView,
+    View,
+    StyleSheet,
+    Dimensions,
+    Modal,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
+    Animated,
+    PanResponder,
+    Alert
+} from 'react-native';
+import Comment from '../../components/Comment';
+
 import Event_Cover_Image from '../../assets/images/event-cover.png';
 import UserCountIcon from '../../assets/images/user_count_icon.png';
 import ShareIcon from '../../assets/images/export.png';
 import ImInIcon from '../../assets/images/im_in_icon.png';
 import CommentIcon from '../../assets/images/comment_icon.png';
 import DeleteIcon from '../../assets/images/trash_icon.png';
+import axios, { all } from 'axios';
+import GalleryImportIcon from '../../assets/images/gallery-import-2.png';
 import EditIcon from '../../assets/images/edit_icon_2.png';
 import SendIcon from '../../assets/images/send_icon.png';
 import BackArrowButton2 from '../../assets/images/back_arrow_icon_3.png';
 import Media_tab from './Media_tab'
 import { launchImageLibrary } from 'react-native-image-picker';
-import Event_tab
-    from './Event_tab';
+import Event_tab from './Event_tab';
 import { getEventById } from '../../api/events';
 import { fi } from 'date-fns/locale';
 import CommentsList from '../../components/CommentsList';
@@ -32,28 +52,43 @@ const Event_page = ({ navigation, route }) => {
     const [comment, setComment] = useState('');
     const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(4);
     const [selectImage, setSelectImage] = useState(false);
+
+    const [selectedImages, setSelectedImages] = useState([]);
+    const [refreshMediaTab, setRefreshMediaTab] = useState(false);
+    //const eventID = '677f536a0f5d27206ba283d1'
+    //const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQ3OTI3NiwiZXhwIjoxNzM2NTY1Njc2fQ.kUa6pxJH81aJ_u4J5t2NYyi79iEmz0-7MLl0pNRXneQ'
     const [event, setEvent] = useState(null);
     const [comments, setComments] = useState([]);
     const [isAttending, setIsAttending] = useState(false);
     const [user, setUser] = useState(null);
-    const slideAnim = useState(new Animated.Value(0))[0];
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [loadingUser, setLoadingUser] = useState(true);
     const [loadingAttend, setLoadingAttend] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
 
+    // Animated value for modal slide
+    const slideAnim = useState(new Animated.Value(0))[0];
+
+    // const handleSelectImage = (state) => {
+    //     setSelectImage(state);
+    //     console.log('Select Mode:', state ? 'Enabled' : 'Disabled');
+    // };
+
+    const handleSelectImage = (images) => {
+        setSelectImage(true);
+        console.log(images[0]);
+        setSelectedImages((prevSelectedImages) => [
+            ...prevSelectedImages,
+            ...(Array.isArray(images) ? images : []),  // Fallback to an empty array if not an array
+        ]);
+        console.log('Selected images:', images);
+    };
+
 
     const { id, hostedByUser } = route.params;
 
     console.log('eventHostedByUser', id, hostedByUser);
-
-   
-
-    const handleSelectImage = (state) => {
-        setSelectImage(state);
-        console.log('Select Mode:', state ? 'Enabled' : 'Disabled');
-    };
 
     const statusText = {
         0: 'Hosting',
@@ -228,8 +263,6 @@ const Event_page = ({ navigation, route }) => {
 
     const userCount = event.attendUsers.length;
 
-
-
     const renderTabContent = () => {
         if (activeTab === 'details') {
             return (
@@ -239,29 +272,172 @@ const Event_page = ({ navigation, route }) => {
             );
         } else if (activeTab === 'media') {
             return <Media_tab eventHostedByUser={eventHostedByUser} no_of_UploadedImages={no_of_UploadedImages} onSelectImage={handleSelectImage} />;
-
         }
-
     };
 
-    const pickImage = () => {
+
+    const handleDeleteSelectedImages = async () => {
+        let allImages = [];
+    
+        const getEventImagesById = async (eventID) => {
+            try {
+                const response = await axios.get(
+                    `http://10.0.3.2:5001/api/events/${eventID}`,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    }
+                );
+    
+                const data = response.data;
+    
+                // Filter out selected images
+                allImages = data.images.filter((image) => !selectedImages.includes(image));
+    
+                console.log('Filtered Images:', allImages);
+            } catch (error) {
+                console.error(
+                    'Error fetching event:',
+                    error.response ? error.response.data : error.message
+                );
+            }
+        };
+    
+        const deleteImages = async (eventID) => {
+            try {
+                await axios.put(
+                    `http://10.0.3.2:5001/api/events/update`,
+                    {
+                        eventId: eventID,
+                        images: allImages,
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    }
+                );
+    
+                console.log('Updated Images:', allImages);
+            } catch (error) {
+                console.error(
+                    'Error updating event:',
+                    error.response ? error.response.data : error.message
+                );
+            }
+        };
+    
+        await getEventImagesById(eventID);
+        await deleteImages(eventID);
+    
+        // Trigger media tab refresh
+        setRefreshMediaTab(prev => !prev);
+    };
+    
+
+    const pickImages = async (eventID) => {
         launchImageLibrary(
             {
                 mediaType: 'photo',
-                includeBase64: false,
+                quality: 0.5,
+                selectionLimit: 5, // Limit to 5 images
             },
-            (response) => {
+            async (response) => {
                 if (response.didCancel) {
                     console.log('User cancelled image picker');
                 } else if (response.errorMessage) {
                     console.log('ImagePicker Error: ', response.errorMessage);
                 } else {
-                    console.log(response.assets[0].uri);
-                    // Handle the selected image URI
+                    // Prepare images for upload
+                    const images = response.assets.map((asset, index) => {
+                        // Extract the correct file extension
+                        const fileName = asset.fileName || `image_${Date.now()}`;
+                        const fileType = asset.type;
+                        const fileExtension = fileType.split('/')[1]; // Get file extension from MIME type
+
+                        // Ensure fileName includes extension
+                        return {
+                            uri: asset.uri,
+                            fileName: `${fileName}`,
+                            type: fileType,
+                        };
+                    });
+
+                    const formData = new FormData();
+
+                    images.forEach((image, index) => {
+                        formData.append('images', {
+                            uri: image.uri,
+                            name: image.fileName, // Ensure fileName includes extension
+                            type: image.type,
+                        });
+                    });
+
+                    try {
+                        // Upload images
+                        const uploadResponse = await axios.post(
+                            'http://10.0.3.2:5001/api/events/upload-images',
+                            formData,
+                            {
+                                headers: {
+                                    'Content-Type': 'multipart/form-data',
+                                    Authorization: `Bearer ${token}`,
+                                },
+                            }
+                        );
+
+                        if (uploadResponse.status === 200 && uploadResponse.data.files?.length > 0) {
+                            // Extract the URLs of the uploaded images
+                            const uploadedImageUrls = uploadResponse.data.files.map((file) => file.url);
+
+                            Alert.alert('Success', 'Images uploaded successfully');
+
+                            // Update event details with uploaded image URLs
+                            const formattedEventDetails = {
+                                eventId: eventID, // Include the eventId explicitly
+                                images: uploadedImageUrls, // Add the uploaded image URLs
+                            };
+
+                            const updateResponse = await axios.put(
+                                'http://10.0.3.2:5001/api/events/update',
+                                formattedEventDetails,
+                                {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`,
+                                    },
+                                }
+                            );
+
+                            if (updateResponse.status === 200) {
+                                Alert.alert('Success', 'Event updated successfully with images');
+                                // Refresh media tab after successful upload
+                                setRefreshMediaTab((prev) => !prev); 
+                            } else {
+                                Alert.alert('Error', 'Failed to update the event');
+                            }
+                        } else {
+                            Alert.alert('Error', 'Failed to upload the images');
+                        }
+                    } catch (error) {
+                        Alert.alert('Error', 'Something went wrong while uploading images or updating the event');
+                        console.error(error); // Log the error for debugging
+                        const { response } = error;
+                        if (response) {
+                            console.error('Response:', response.data);
+                        }
+                    }
                 }
             }
         );
+        
+        
     };
+
+
 
 
     const renderBottomBar = () => {
@@ -269,19 +445,24 @@ const Event_page = ({ navigation, route }) => {
             return (
                 <View style={styles.bottomBar}>
                     {!selectImage && eventHostedByUser && (
-                        <TouchableOpacity style={styles.uploadButton1} onPress={pickImage}>
+                        <TouchableOpacity style={styles.uploadButton1} onPress={() => pickImages(eventID)}>
                             <Text style={styles.uploadText}>Upload</Text>
                         </TouchableOpacity>
                     )}
 
                     {selectImage && eventHostedByUser && (
                         <>
+
+                            <TouchableOpacity style={styles.uploadButton2} onPress={() => pickImages(eventID)}>
+
                             <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
+
                                 <Text style={styles.uploadText}>Upload</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.deleteButton, { color: '#DA4F4F', flexDirection: 'row' }]}
-                                onPress={''}
+
+                                onPress={handleDeleteSelectedImages}
                             >
                                 <Text style={styles.deleteText}>Delete</Text>
                                 <Image source={DeleteIcon} style={styles.deleteIcon} />
@@ -324,6 +505,7 @@ const Event_page = ({ navigation, route }) => {
             <View style={styles.container}>
                 <View style={styles.imageWrapper}>
 
+
                     <Image source={{ uri: event.images[0] }} resizeMode="cover" style={styles.coverImage} />
                     <View style={styles.overlay} />
                     <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.backIconWrapper}>
@@ -344,6 +526,7 @@ const Event_page = ({ navigation, route }) => {
                     )}
                     <Text style={styles.userCount}>{userCount}</Text>
                     <Image source={UserCountIcon} resizeMode="cover" style={styles.icon} />
+
                     <Text style={styles.eventName}>{event.eventName}</Text>
                     <View style={styles.statusWrapper}>
                         <Text style={styles.statusText}>{statusText[event.status] || 'Unknown'}</Text>

@@ -1,6 +1,6 @@
 import React,{ useState,useEffect } from 'react';
 import axios from 'axios';
-import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable,TouchableOpacity,Modal,Animated,FlatList,TouchableWithoutFeedback} from 'react-native';
+import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable,TouchableOpacity,Modal,Animated,FlatList,Alert} from 'react-native';
 import BackArrowIcon from '../../assets/images/back_arrow_icon_2.png';
 import SearchNormalIcon from '../../assets/images/search-normal.png';
 import SearchPressedIcon from '../../assets/images/search-pressed.png';
@@ -8,13 +8,13 @@ import { EventDetail } from '../../components/EventDetail';
 import { LocationDetail } from '../../components/LocationDetail';
 import { AboutEvent } from '../../components/AboutEvent';
 import DateTimePickerComponent from '../../components/DateTimePicker';
-import { CoverPhotoUploadPortal } from '../../components/CoverPhotoUploadPortal';
+import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUploadPortal';
 
 
 const Add_event = ({navigation}) => {
 
     const [eventDetails, setEventDetails] = useState({
-        coverPhoto: '',
+        backgroundImage: '',
         eventName: '',
         startDateTime: '',
         endDateTime: '',
@@ -37,14 +37,35 @@ const Add_event = ({navigation}) => {
     };
 
     const submitEventDetails = async () => {
+        // Check for missing details
+        const missingDetails = [];
+        if (!eventDetails.eventName) missingDetails.push('Event Name');
+        if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
+        if (!eventDetails.endDateTime) missingDetails.push('End Date/Time');
+        if (!eventDetails.location) missingDetails.push('Location');
+        if (!eventDetails.aboutEvent) missingDetails.push('About Event');
+        console.log('submit uri: ',eventDetails.backgroundImage)
+
+        if (missingDetails.length > 0) {
+            // Show alert for missing details
+            Alert.alert(
+                'Missing Details',
+                `Please add the following details:\n${missingDetails.join('\n')}`,
+                [{ text: 'OK', style: 'cancel' }]
+            );
+            return; // Exit function if validation fails
+        }
+
+        // Format event details for the API
         const formattedEventDetails = {
             ...eventDetails,
+            backgroundImage: eventDetails.backgroundImage,
             startDate: eventDetails.startDateTime,
             endDate: eventDetails.endDateTime,
-            images: [eventDetails.coverPhoto], // Convert coverPhoto to an array
-            status: parseInt(eventDetails.status, 10), // Convert status to a number
+            images: [],
+            status: parseInt(eventDetails.status, 0), // Convert status to a number
         };
-    
+
         try {
             const response = await axios.post(
                 'http://10.0.3.2:5001/api/events/add',
@@ -52,15 +73,31 @@ const Add_event = ({navigation}) => {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2JjYTk4M2MyMmFiNDU1YmZlNjA2ZSIsImlhdCI6MTczNjE3NDI0NCwiZXhwIjoxNzM2MTc3ODQ0fQ.KKbpYhJn3nTIUUL4EqUGzY0U92AGnnYJ7OxnklY4z1A',
+                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`, // Use backticks for interpolation
                     },
                 }
             );
             console.log('Event saved:', response.data);
+
+            // Show success alert
+            Alert.alert('Success', 'Event created successfully!', [
+                {
+                    text: 'OK',
+                    onPress: () => navigation.navigate('EventPage'), // Navigate to the Event page
+                },
+            ]);
         } catch (error) {
             console.error('Error saving event:', error.response ? error.response.data : error.message);
+
+            // Show error alert for API issues
+            Alert.alert(
+                'Error',
+                error.response ? error.response.data.message || 'Failed to create event' : 'Something went wrong',
+                [{ text: 'OK', style: 'cancel' }]
+            );
         }
     };
+    
     
     
 
@@ -103,37 +140,45 @@ const Add_event = ({navigation}) => {
         setIsModalVisible(false);
     };
 
-    const updateCoverPhoto = (uri) => {
+    const updateBackgroundImage = (uri) => {
         setEventDetails((prevDetails) => ({
           ...prevDetails,
-          coverPhoto: uri,
+          backgroundImage: uri,
         }));
+        
       };
 
     return (
-        <SafeAreaView>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%',backgroundColor: 'white' }}>
-                
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%',marginBottom: '24',paddingHorizontal: 26,}}>
-                        <TouchableOpacity onPress={() => navigation.navigate('Tabs')}>
-                            <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
-                        </TouchableOpacity>
-                        <Text style={[styles.AddEventText]}>Add Event</Text>
-                    </View>
-
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>
+    
+        
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%',marginBottom: '24',paddingHorizontal: 26,}}>
+                <TouchableOpacity onPress={() => navigation.navigate('Tabs')}>
+                    <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
+                </TouchableOpacity>
+                <Text style={[styles.AddEventText]}>Add Event</Text>
+            </View>
+            <ScrollView
+                            contentContainerStyle={{
+                                backgroundColor: 'white',
+                                minHeight: '100%',
+                                paddingHorizontal: 10,
+                            }}
+                            showsVerticalScrollIndicator={false}
+                        >
                 <View style={styles.container}>
-                    <CoverPhotoUploadPortal onCoverPhotoChange={updateCoverPhoto}/>
+                    <BackgroundImageUploadPortal onBackgroundImageChange={updateBackgroundImage} previousBackgroundImage={''}/>
                     <EventDetail property='Event Name' value={eventDetails.eventName} onChangeText={(text) => handleFieldChange('eventName', text)}/>
                     <DateTimePickerComponent property='Start date and time' value={eventDetails.startDateTime} start_or_end='Start' onChangeDateTime={(datetime) => handleFieldChange('startDateTime', datetime.toISOString())} />
                     <DateTimePickerComponent property='End date and time' value={eventDetails.endDateTime} start_or_end='End' onChangeDateTime={(datetime) => handleFieldChange('endDateTime', datetime.toISOString())} />
                     <LocationDetail property='Location' value={eventDetails.location} onPress={() => setIsModalVisible(true)}/>
                     <AboutEvent property='About Event' value={eventDetails.aboutEvent} onChangeText={(text) => handleFieldChange('aboutEvent', text)}/>
 
-                    <TouchableOpacity style={styles.Create_Event_Button} onPress={()=>submitEventDetails()}>
-                        <Text style={styles.buttonTextCreateEvent}>Create Event</Text>
-                    </TouchableOpacity>
+                    
 
                 </View>
+            </ScrollView>
+
 
                 {/* Modal for Editing Details */}
                 <Modal
@@ -201,9 +246,14 @@ const Add_event = ({navigation}) => {
                         </Animated.View>
                     </View>
                     </Modal>
-
-
-            </ScrollView>
+                    <View style={styles.bottomContainer}>
+                        <TouchableOpacity style={styles.Create_Event_Button} onPress={()=>submitEventDetails()}>
+                            <Text style={styles.buttonTextCreateEvent}>Create Event</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    
+            
         </SafeAreaView>
     )
 }
@@ -264,8 +314,7 @@ const styles = StyleSheet.create({
         borderRadius: 60,
         borderColor: '#00B894',
         borderWidth: 1,
-        marginBottom: 10,
-        marginTop: '10%',
+        marginTop: '9%',
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
@@ -325,6 +374,20 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#333',
         marginVertical:10
+    },
+    bottomContainer: {
+        height: 100,
+        width: '100%',
+        paddingHorizontal: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingBottom: 20,
+        shadowColor: 'grey',
+        shadowOffset: { width: 0, height: 15 }, 
+        shadowOpacity: 0.8, 
+        shadowRadius: 6, 
+        elevation: 1,
+        zIndex: 1,
     },
 
 });
