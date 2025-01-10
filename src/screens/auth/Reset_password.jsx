@@ -1,10 +1,11 @@
 import React,{ useState } from 'react';
-import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TouchableOpacity,TextInput,Pressable} from 'react-native';
+import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TouchableOpacity,TextInput,Pressable,Alert} from 'react-native';
 import EyeIcon from '../../assets/images/eye_icon.png';
 import LockIcon from '../../assets/images/lock_icon.png';
 import EyeOffIcon from '../../assets/images/hide_password.png';
 import CheckIcon from '../../assets/images/check_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
+import { resetPassword } from '../../api/auth';
 
 
 const Reset_password = ({ navigation }) => {
@@ -14,6 +15,41 @@ const Reset_password = ({ navigation }) => {
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+    const email = 'user@gmail.com'
+
+
+    const handleReset = async (email, newPassword, confirmPassword, navigation) => {
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z@$!%*?&]{8,}$/;
+      
+        if (newPassword !== confirmPassword) {
+          Alert.alert('Error', "Passwords don't match");
+          return;
+        }
+      
+        if (!passwordRegex.test(newPassword)) {
+          Alert.alert(
+            'Error',
+            'Password must include:\n' +
+              '- At least 8 characters\n' +
+              '- At least 1 special character\n' +
+              '- At least 1 uppercase letter and 1 lowercase letter'
+          );
+          return;
+        }
+      
+        try {
+          const message = await resetPassword(email, newPassword);
+          Alert.alert('Success', message, [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('Login'), // Navigate to Login on success
+            },
+          ]);
+        } catch (error) {
+          Alert.alert('Error', error.message); // Show error message
+        }
+      };
+      
 
     return (
             <SafeAreaView>
@@ -91,7 +127,7 @@ const Reset_password = ({ navigation }) => {
                         </View>
                         
                         
-                        <TouchableOpacity style={styles.Confirm_Button} onPress={() => navigation.navigate('Login')}>
+                        <TouchableOpacity style={styles.Confirm_Button} onPress={() =>handleReset(email,newPassword,confirmPassword,navigation) }>
                                 <Text style={styles.buttonTextConfirm}>CONFIRM</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.Cancel_Button} onPress={() => navigation.navigate('Login')}>
