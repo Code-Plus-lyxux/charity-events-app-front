@@ -37,8 +37,19 @@ const UserProfile = ({ navigation }) => {
                     ...userData.eventsAttending,
                 ];
 
+                const seen = new Set();
+                const uniqueEvents = allEvents.filter((event) => {
+                    if (seen.has(event._id)) {
+                        return false;
+                    }
+                    seen.add(event._id);
+                    return true;
+                });
+
+                setEvents(uniqueEvents);
+
                 setUser(userData);
-                setEvents(allEvents); // Set the combined events to state
+                //setEvents(allEvents); // Set the combined events to state
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -53,12 +64,7 @@ const UserProfile = ({ navigation }) => {
         if (icon === "hand") {
             setEvents(user.eventsAttending); // Only show attending events
         } else {
-            const allEvents = [
-                ...user.eventsAttended,
-                ...user.eventsCreated,
-                ...user.eventsAttending,
-            ];
-            setEvents(allEvents); // Show all events
+            setEvents(uniqueEvents);
         }
     };
 

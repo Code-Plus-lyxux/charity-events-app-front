@@ -20,6 +20,7 @@ import { addCommentToEvent } from '../../api/events';
 import { addUserToEvent } from '../../api/events';
 import { removeUserFromEvent } from '../../api/events';
 import { getLoggedUser } from '../../api/user';
+import { format } from 'date-fns';
 
 
 const { height } = Dimensions.get('window');
@@ -107,26 +108,19 @@ const Event_page = ({ navigation, route }) => {
 
 
 
-    const formatEventDate = (startDate, endDate) => {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        const options = { day: '2-digit', month: 'long', year: 'numeric' };
-        const formattedDate = start.toLocaleDateString('en-US', options);
-
-        const formatTime = (date) => {
-            let hours = date.getHours();
-            const minutes = date.getMinutes();
-            const period = hours >= 12 ? 'pm' : 'am';
-            hours = hours % 12 || 12; // Convert 24-hour to 12-hour format
-            return `${hours}${minutes > 0 ? `:${minutes}` : ''}${period}`;
-        };
-
-        const startTime = formatTime(start);
-        const endTime = formatTime(end);
-
-        return `${formattedDate} at ${startTime} to ${endTime}`;
+    const formatEventDates = (startDate, endDate) => {
+        const formattedStartDate = format(new Date(startDate), "yyyy MMMM 'from' h a"); // Escaped 'from'
+        const formattedEndDate = format(new Date(endDate), "h a"); // 12 PM
+        
+        return `${formattedStartDate} to ${formattedEndDate}`;
     };
+    
+    const startDate = "2025-02-03T09:00:00.000Z";
+    const endDate = "2025-02-03T12:00:00.000Z";
+    
+    console.log(formatEventDates(startDate, endDate));
+    
+    
 
     // Add comment
     const handleAddComment = async () => {
@@ -240,7 +234,7 @@ const Event_page = ({ navigation, route }) => {
         if (activeTab === 'details') {
             return (
                 <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
-                    <Event_tab dateTime={formatEventDate(event.startDate, event.endDate)} location={event.location} aboutEvent={event.aboutEvent} />
+                    <Event_tab dateTime={formatEventDates(event.startDate, event.endDate)} location={event.location} aboutEvent={event.aboutEvent} />
                 </ScrollView>
             );
         } else if (activeTab === 'media') {

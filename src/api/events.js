@@ -150,3 +150,47 @@ export const removeUserFromEvent = async (eventId) => {
         alert("Failed to remove user from event");
     }
 };
+
+
+//Get all upcoming events by locatiom
+export const getAllUpcomingEventsByLocation = async (location) => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+        throw new Error('No token found');
+    }
+    try {
+        const response = await axios.get(`${API_URL}/api/events/upcoming-all-by-location/${location}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching events:', error.response?.data || error.message);
+        throw error.response?.data || { message: 'Failed to fetch events.' };
+    }
+};
+
+
+//Get all events by stauts
+export const getEventsByStatus = async (status) => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+        throw new Error('No token found');
+    }
+    try {
+        const response = await axios.get(`${API_URL}/api/events/allEvents/${status}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                }
+            });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching events:', error.message);
+        throw error;
+    }
+};

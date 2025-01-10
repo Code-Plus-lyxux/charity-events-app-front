@@ -3,26 +3,52 @@ import React, { useEffect, useState } from 'react';
 import EventCard from '../../components/EventCard';
 import SearchBar from '../../components/SearchBar';
 import Location from '../../assets/icons/location-black.png';
-import events from '../../constants/events';
-import { fetchEvents } from '../../api/events';
+import { getLoggedUser } from '../../api/user';
+import { getAllUpcomingEventsByLocation } from '../../api/events';
+import { getEventsByStatus } from '../../api/events';
+import { set } from 'date-fns';
+import { is } from 'date-fns/locale';
 
 const Home = ({ navigation }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const getEvents = async () => {
+    let isMounted = true;
+
+    const fetchData = async () => {
       try {
-        const eventsData = await fetchEvents(1, 1, 10);
-        setEvents(eventsData.events || []);
+        const userData = await getLoggedUser();
+        if (userData.location === null) {
+          const events = await getEventsByStatus('1');
+          if (isMounted) {
+            setEvents(events);
+          }
+        } else {
+          const events = await getAllUpcomingEventsByLocation(userData.location);
+          if (isMounted) {
+            setEvents(events);
+          }
+        }
+
+        if (isMounted) {
+          setUser(userData);
+        }
+
+
       } catch (error) {
-        console.error('Error fetching events:', error);
+        if (isMounted) {
+          console.error('Error fetching events:', error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    getEvents();
+    fetchData();
   }, []);
 
   const handleAddEvent = () => {
@@ -33,7 +59,11 @@ const Home = ({ navigation }) => {
     <View style={styles.mainContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 30 }}>
         <Image source={Location} style={{ marginTop: 5 }} />
-        <Text style={styles.location}>Kandy, Sri Lanka</Text>
+        <Pressable onPress={() => navigation.navigate('ProfilePage')} >
+        <Text style={styles.location}>
+          {user?.location ? user.location : 'Set your location'}
+        </Text>
+        </Pressable>
       </View>
       <Text style={{ fontSize: 20, marginLeft: 30, fontWeight: 'bold' }} >Discover and Join Community Events</Text>
       <Text style={{ fontSize: 14, marginLeft: 30, marginTop: 10, fontWeight: 'bold', color: '#00B894' }} >Join hands and be a part of something meaningful</Text>
@@ -49,7 +79,7 @@ const Home = ({ navigation }) => {
       </View>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}>
           {loading ? (
             <Text>Loading...</Text>
           ) : (
