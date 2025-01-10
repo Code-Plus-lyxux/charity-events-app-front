@@ -26,7 +26,7 @@ const UserProfile = ({ navigation }) => {
         const fetchUser = async () => {
             try {
                 const userData = await getLoggedUser();
-                console.log(userData);
+                console.log(userData, user);
 
                 setUser(userData);
 
@@ -37,8 +37,19 @@ const UserProfile = ({ navigation }) => {
                     ...userData.eventsAttending,
                 ];
 
+                const seen = new Set();
+                const uniqueEvents = allEvents.filter((event) => {
+                    if (seen.has(event._id)) {
+                        return false;
+                    }
+                    seen.add(event._id);
+                    return true;
+                });
+
+                setEvents(uniqueEvents);
+
                 setUser(userData);
-                setEvents(allEvents); // Set the combined events to state
+                //setEvents(allEvents); // Set the combined events to state
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -53,12 +64,7 @@ const UserProfile = ({ navigation }) => {
         if (icon === "hand") {
             setEvents(user.eventsAttending); // Only show attending events
         } else {
-            const allEvents = [
-                ...user.eventsAttended,
-                ...user.eventsCreated,
-                ...user.eventsAttending,
-            ];
-            setEvents(allEvents); // Show all events
+            setEvents(uniqueEvents);
         }
     };
 
@@ -70,15 +76,13 @@ const UserProfile = ({ navigation }) => {
         );
     }
 
-    
-    if (loading) {
+    if (!user) {
         return (
             <View>
                 <Text>Loading...</Text>
             </View>
         );
     }
-
 
 
     return (
@@ -90,12 +94,12 @@ const UserProfile = ({ navigation }) => {
             </Pressable>
             <View style={styles.container}>
                 <Image
-                    source={user.profileImage ? { uri: user.image } : user_image}
+                    source={user.image ? { uri: user.image } : user_image}
                     resizeMode="contain"
                     style={styles.imageStyle}
                 />
 
-                <Text style={styles.NameText}>{user.firstName}</Text>
+                <Text style={styles.NameText}>{user.fullName}</Text>
                 <Text style={styles.EmailText}>{user.email}</Text>
             </View>
             <IconToggle onIconPress={handleIconPress} />
@@ -103,11 +107,9 @@ const UserProfile = ({ navigation }) => {
                 <ScrollView
                     contentContainerStyle={styles.scrollContainer}
                     showsVerticalScrollIndicator={false}>
-                    {loading ? (
-            <Text>Loading...</Text>
-          ) : (events.map((event, index) => (
+                    {events.map((event, index) => (
                         <EventCard key={index} event={event} />
-                    )))}
+                    ))}
                 </ScrollView>
             </View>
         </SafeAreaView>

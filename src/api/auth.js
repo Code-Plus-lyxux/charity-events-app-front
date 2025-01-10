@@ -22,7 +22,7 @@ export const loginUser = async (credentials) => {
     await AsyncStorage.setItem('token', token);
     await AsyncStorage.setItem('userId', userId);
 
-    console.log('Tokenfr:', token, 'user::', userId);
+    console.log('Token:', token, 'user::', userId);
 
     return response.data;
     
@@ -32,5 +32,39 @@ export const loginUser = async (credentials) => {
     } else {
       throw new Error('An error occurred while logging in');
     }
+  }
+};
+
+
+//Send OTP
+export const sendResetOTP = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/auth/password/reset`, { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending reset OTP:', error.response?.data?.error || error.message);
+    throw error.response?.data || { error: 'Failed to send OTP.' };
+  }
+}
+
+
+// verify OTP
+export const verifyOTP = async (email, otp) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/auth/password/verify`, { email, otp });
+    return response.data;
+  } catch (error) {
+    const backendError = error.response?.data;
+    console.error('Error verifying OTP:', backendError?.error || error.message);
+
+    if (backendError?.code === 'INVALID_OTP') {
+      throw new Error('The OTP entered is invalid. Please check and try again.');
+    }
+
+    if (backendError?.code === 'OTP_EXPIRED') {
+      throw new Error('The OTP has expired. Please request a new OTP.');
+    }
+
+    throw new Error(backendError?.error || 'Failed to verify OTP. Please try again later.');
   }
 };
