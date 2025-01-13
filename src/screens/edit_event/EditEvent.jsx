@@ -11,26 +11,48 @@ import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUpl
 import { UploadCover } from '../../components/UploadCover';
 import Hero from '../../assets/images/event-cover.png';
 import axios from 'axios';
+import { API_URL } from '../../constants/api';
+import { se } from 'date-fns/locale';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-const EditEvent = ({ navigation,route }) => {
-     const [eventDetails, setEventDetails] = useState({
-            backgroundImage: '',
-            eventName: '',
-            startDateTime: '',
-            endDateTime: '',
-            location: '',
-            aboutEvent: '',
-            status: '0'
-        });  
+const EditEvent = ({ navigation, route }) => {
+    const [eventDetails, setEventDetails] = useState({
+        backgroundImage: '',
+        eventName: '',
+        startDateTime: '',
+        endDateTime: '',
+        location: '',
+        aboutEvent: '',
+        status: '0'
+    });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching, setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Kandy', 'Kandy,Sri Lanka']);
-    //const eventID = route.params?.eventID;
-    const eventID = '677f59ac0f5d27206ba283d9'
+
+    const [isLoading, setIsLoading] = useState(false);
+    //const eventID = '677f59ac0f5d27206ba283d9'
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
+
+    const { eventID, eventName, location, startDate, endDate, aboutEvent, backgroundImage } = route.params;
     
+    const [name, setName] = useState('');
+    const [eventLocation, setEventLocation] = useState('');
+    const [start, setStart] = useState('');
+    const [end, setEnd] = useState('');
+    const [about, setAbout] = useState('');
+    const [image, setImage] = useState('');
+
+    // Pre-fill the fields with the data passed in route.params
+    useEffect(() => {
+        setName(eventName || '');
+        setEventLocation(location || '');
+        setStart(startDate || '');
+        setEnd(endDate || '');
+        setAbout(aboutEvent || '');
+        setImage(backgroundImage || '');
+    }, [eventName, location, startDate, endDate, aboutEvent, backgroundImage]);
 
     useEffect(() => {
         if (eventID) {
@@ -81,19 +103,25 @@ const EditEvent = ({ navigation,route }) => {
     };
 
     const getEventById = async () => {
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token', token);
+
+        if (!token) {
+            throw new Error('No token found');
+        }
         try {
             const response = await axios.get(
-                `http://10.0.3.2:5001/api/events/${eventID}`,
+                `${API_URL}/api/events/${eventID}`,
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`,
+                        'Authorization': `Bearer ${token}`,
                     },
                 }
             );
-    
+
             const data = response.data;
-            
+
 
             // Map the data to match your state structure if necessary
             setEventDetails({
@@ -105,91 +133,97 @@ const EditEvent = ({ navigation,route }) => {
                 aboutEvent: data.aboutEvent || '',
                 status: data.status?.toString() || '0', // Convert status to string for the form
             });
-    
+
             console.log('Fetched event:', data);
         } catch (error) {
             console.error('Error fetching event:', error.response ? error.response.data : error.message);
         }
     };
-    
+
 
     const updateEventDetails = async () => {
-        // Check for missing details
-        const missingDetails = [];
-        if (!eventDetails.eventName) missingDetails.push('Event Name');
-        if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
-        if (!eventDetails.endDateTime) missingDetails.push('End Date/Time');
-        if (!eventDetails.location) missingDetails.push('Location');
-        if (!eventDetails.aboutEvent) missingDetails.push('About Event');
-    
-        if (missingDetails.length > 0) {
-            // Show alert for missing details
-            Alert.alert(
-                'Missing Details',
-                `Please add the following details:\n${missingDetails.join('\n')}`,
-                [{ text: 'OK', style: 'cancel' }]
-            );
-            return; // Exit function if validation fails
-        }
-    
-        // Format event details for the API
-        const formattedEventDetails = {
-            ...eventDetails,
-            eventId: eventID, // Include the eventId explicitly
-            startDate: eventDetails.startDateTime, // Map startDateTime to startDate
-            endDate: eventDetails.endDateTime, // Map endDateTime to endDate
-            backgroundImage: eventDetails.backgroundImage || null, // Handle null backgroundImage
-            status: parseInt(eventDetails.status, 10), // Ensure status is a number
-        };
-    
-        try {
-            const response = await axios.put(
-                'http://10.0.3.2:5001/api/events/update',
-                formattedEventDetails,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`, // Replace YOUR_ACCESS_TOKEN with the actual token
-                    },
-                }
-            );
-            console.log('Event updated successfully:', response.data);
-    
-            // Show success alert and navigate to EventPage with route parameter
-            Alert.alert('Success', 'Event updated successfully!', [
-                {
-                    text: 'OK',
-                    onPress: () => navigation.navigate('EventPage', { hostedByUser: true }),
-                },
-            ]);
-        } catch (error) {
-            console.error(
-                'Error updating event:',
-                error.response ? error.response.data : error.message
-            );
-    
-            // Show error alert for API issues
-            Alert.alert(
-                'Error',
-                error.response ? error.response.data.message || 'Failed to update event' : 'Something went wrong',
-                [{ text: 'OK', style: 'cancel' }]
-            );
-        }
-    };
-    
-    const updateBackgroundImage = (uri) => {
-        setEventDetails((prevDetails) => ({
-          ...prevDetails,
-          backgroundImage: uri,
-        }));
-        
-      };
+        // // Check for missing details
+        // const missingDetails = [];
+        // if (!eventDetails.eventName) missingDetails.push('Event Name');
+        // if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
+        // if (!eventDetails.endDateTime) missingDetails.push('End Date/Time');
+        // if (!eventDetails.location) missingDetails.push('Location');
+        // if (!eventDetails.aboutEvent) missingDetails.push('About Event');
+
+        // if (missingDetails.length > 0) {
+        //     // Show alert for missing details
+        //     Alert.alert(
+        //         'Missing Details',
+        //         `Please add the following details:\n${missingDetails.join('\n')}`,
+        //         [{ text: 'OK', style: 'cancel' }]
+        //     );
+        //     return; // Exit function if validation fails
+        // }
+
+        // // Format event details for the API
+        // const formattedEventDetails = {
+        //     ...eventDetails,
+        //     eventId: eventID, // Include the eventId explicitly
+        //     startDate: eventDetails.startDateTime, // Map startDateTime to startDate
+        //     endDate: eventDetails.endDateTime, // Map endDateTime to endDate
+        //     backgroundImage: eventDetails.backgroundImage || null, // Handle null backgroundImage
+        //     status: parseInt(eventDetails.status, 10), // Ensure status is a number
+        // };
+
+        setIsLoading(true);
+
+  const formattedEventDetails = {
+    eventId: eventID,
+    eventName: name,
+    location: eventLocation,
+    startDate: start,
+    endDate: end,
+    aboutEvent: about,
+    backgroundImage: image,
+  };
+  console.log('Formatted event details:', formattedEventDetails);
+  //console.log('Event ID:', eventId);
+
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+
+    const response = await axios.put(
+      `${API_URL}/api/events/update`,
+      formattedEventDetails,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log('Event updated successfully:', response.data);
+
+    Alert.alert('Success', 'Event updated successfully!', [
+      { text: 'OK', onPress: () => navigation.navigate('EventPage', { hostedByUser: true }) },
+    ]);
+  } catch (error) {
+    console.error('Error updating event:', error);
+
+    Alert.alert(
+      'Error',
+      error?.response?.data?.message || 'Failed to update event. Please try again.',
+      [{ text: 'OK', style: 'cancel' }]
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%', paddingHorizontal: 26, }}>
-                <TouchableOpacity onPress={() => navigation.navigate('EventPage')}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
                 </TouchableOpacity>
                 <Text style={[styles.AddEventText]}>Edit Event</Text>
@@ -203,122 +237,116 @@ const EditEvent = ({ navigation,route }) => {
                 }}
                 showsVerticalScrollIndicator={false}
             >
-            
+
                 <View style={styles.container}>
-                    <BackgroundImageUploadPortal onBackgroundImageChange={updateBackgroundImage} previousBackgroundImage={eventDetails.backgroundImage}/>
-                    <EventDetail 
-                        property="Event Name" 
-                        value={eventDetails.eventName} 
-                        onChangeText={(text) => 
-                            setEventDetails((prev) => ({ ...prev, eventName: text }))
-                        } 
+                    <BackgroundImageUploadPortal
+                        onBackgroundImageChange={setImage}
+                        previousBackgroundImage={image}
                     />
-                    <DateTimePickerComponent 
-                        property="Start date and time" 
-                        value={eventDetails.startDateTime} 
-                        start_or_end="Start" 
-                        onChangeDateTime={(datetime) => 
-                            setEventDetails((prev) => ({ ...prev, startDateTime: datetime.toISOString() }))
-                        } 
+
+                    <EventDetail
+                        property="Event Name"
+                        value={name}
+                        onChangeText={setName}
                     />
-                    <DateTimePickerComponent 
-                        property="End date and time" 
-                        value={eventDetails.endDateTime} 
-                        start_or_end="End" 
-                        onChangeDateTime={(datetime) => 
-                            setEventDetails((prev) => ({ ...prev, endDateTime: datetime.toISOString() }))
-                        } 
+                    <DateTimePickerComponent
+                        property="Start date and time"
+                        value={start}
+                        start_or_end="Start"
+                        onChangeDateTime={setStart}
                     />
-                    <LocationDetail 
-                        property="Location" 
-                        value={eventDetails.location} 
-                        onPress={() => setIsModalVisible(true)} 
-                        onChangeLocation={(location) => 
-                            setEventDetails((prev) => ({ ...prev, location }))
-                        }
+                    <DateTimePickerComponent
+                        property="End date and time"
+                        value={end}
+                        start_or_end="End"
+                        onChangeDateTime={setEnd}
                     />
-                    <AboutEvent 
-                        property="About Event" 
-                        value={eventDetails.aboutEvent} 
-                        onChangeText={(text) => 
-                            setEventDetails((prev) => ({ ...prev, aboutEvent: text }))
-                        } 
+                    <LocationDetail
+                        property="Location"
+                        value={eventLocation}
+                        onPress={() => setIsModalVisible(true)}
+                        onChangeLocation={setEventLocation}
+                    />
+                    <AboutEvent
+                        property="About Event"
+                        value={about}
+                        onChangeText={setAbout}
                     />
                 </View>
 
-        
+
             </ScrollView>
 
             {/* Modal for Editing Details */}
             <Modal
-                        animationType="none"
-                        transparent={true}
-                        visible={isModalVisible}
-                        onRequestClose={() => setIsModalVisible(false)}
+                animationType="none"
+                transparent={true}
+                visible={isModalVisible}
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+                <View style={styles.modalOverlay} onPress={() => setIsModalVisible(false)}>
+                    <Animated.View
+                        style={[
+                            styles.modalContainer,
+                            { transform: [{ translateY: slideAnim }] },
+                        ]}
                     >
-                        <View style={styles.modalOverlay} onPress={() => setIsModalVisible(false)}>
-                            <Animated.View
-                                style={[
-                                    styles.modalContainer,
-                                    { transform: [{ translateY: slideAnim }] },
-                                ]}
-                            >
-                                <Pressable
-                                    style={[
-                                        activeLocationSearching
-                                            ? styles.activeModalInput
-                                            : styles.modalInput,
-                                        {
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                        },
-                                    ]}
-                                    onPress={() => setActiveLocationSearching(true)}
-                                >
-                                    <TextInput
-                                        style={[styles.locationInput, { flex: 1 }]}
-                                        value={eventDetails.location}
-                                        onChangeText={(text) => {
-                                            setLocation(text);
-                                            setActiveLocationSearching(true);
-                                            fetchSuggestions(text)
-                                        }}
-                                        onFocus={() => setActiveLocationSearching(true)}
-                                        placeholder="Search for location"
-                                        placeholderTextColor="#888"
-                                    />
-                                    <Image
-                                        source={activeLocationSearching ? SearchPressedIcon : SearchNormalIcon}
-                                        resizeMode="contain"
-                                        style={[styles.iconStyle, { marginLeft: 10 }]}
-                                    />
-                                </Pressable>
+                        <Pressable
+                            style={[
+                                activeLocationSearching
+                                    ? styles.activeModalInput
+                                    : styles.modalInput,
+                                {
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                },
+                            ]}
+                            onPress={() => setActiveLocationSearching(true)}
+                        >
+                            <TextInput
+                                style={[styles.locationInput, { flex: 1 }]}
+                                value={eventDetails.location}
+                                onChangeText={(text) => {
+                                    setLocation(text);
+                                    setActiveLocationSearching(true);
+                                    fetchSuggestions(text)
+                                }}
+                                onFocus={() => setActiveLocationSearching(true)}
+                                placeholder="Search for location"
+                                placeholderTextColor="#888"
+                            />
+                            <Image
+                                source={activeLocationSearching ? SearchPressedIcon : SearchNormalIcon}
+                                resizeMode="contain"
+                                style={[styles.iconStyle, { marginLeft: 10 }]}
+                            />
+                        </Pressable>
 
-                                {suggestions.length > 0 && (
-                                    <>
-                                        <Text style={styles.suggestionsTitle}>Location Suggestions</Text>
-                                        <FlatList
-                                            data={suggestions}
-                                            keyExtractor={(item, index) => index.toString()}
-                                            renderItem={({ item }) => (
-                                                <TouchableOpacity onPress={() => handleSuggestionSelect(item)} >
-                                                    <View style={styles.separator} />
-                                                    <Text style={styles.suggestionText}>{item}</Text>
-                                                </TouchableOpacity>
-                                            )}
-                                        />
-                                    </>
-                                )}
+                        {suggestions.length > 0 && (
+                            <>
+                                <Text style={styles.suggestionsTitle}>Location Suggestions</Text>
+                                <FlatList
+                                    data={suggestions}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity onPress={() => handleSuggestionSelect(item)} >
+                                            <View style={styles.separator} />
+                                            <Text style={styles.suggestionText}>{item}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            </>
+                        )}
 
 
-                            </Animated.View>
-                        </View>
-                    </Modal>
+                    </Animated.View>
+                </View>
+            </Modal>
 
 
             <View style={styles.bottomContainer}>
-                <TouchableOpacity style={styles.Edit_Event_Button} onPress={()=>updateEventDetails()}>
+                <TouchableOpacity style={styles.Edit_Event_Button} onPress={() => updateEventDetails()}>
                     <Text style={styles.buttonTextEditEvent}>Save Details</Text>
                 </TouchableOpacity>
             </View>
@@ -328,13 +356,13 @@ const EditEvent = ({ navigation,route }) => {
 
 const styles = StyleSheet.create({
     container: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 20,
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
     },
     TitleText: {
         fontSize: 20,
@@ -452,13 +480,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingBottom: 20,
         shadowColor: 'grey',
-        shadowOffset: { width: 0, height: 15 }, 
-        shadowOpacity: 0.8, 
-        shadowRadius: 6, 
+        shadowOffset: { width: 0, height: 15 },
+        shadowOpacity: 0.8,
+        shadowRadius: 6,
         elevation: 1,
         zIndex: 1,
     },
-    
+
 });
 
 

@@ -10,6 +10,7 @@ import axios from 'axios';
 import * as ImagePicker from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLoggedUser } from '../../api/user';
+import { API_URL } from '../../constants/api';
 //import ImageCropPicker from 'react-native-image-crop-picker';
 
 
@@ -73,7 +74,7 @@ const Profile_page = ({ navigation }) => {
         fullName, mobile, password,about,location
         try {
             const response = await axios.put(
-                'http://10.0.3.2:5001/api/user/profile', // Update the endpoint as needed
+                `${API_URL}/api/user/profile`, // Update the endpoint as needed
                 formattedProfileDetails,
                 {
                     headers: {

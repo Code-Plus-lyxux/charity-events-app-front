@@ -1,11 +1,14 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const API_URL = 'http://10.0.2.2:5001';
+//const API_URL = 'http://10.0.2.2:5001';
+import { API_URL } from '../constants/api';
+
 
 // Register a new user
 export const registerUser = async (userData) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/register`, userData);
+    console.log('API Response:', process.env.API_URL);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: error };  
@@ -44,33 +47,6 @@ export const loginUser = async (credentials) => {
   }
 };
 
-
-
-
-// Reset a user's password
-export const resetPassword = async (email, newPassword) => {
-  try {
-    const response = await axios.post(`${API_URL}/api/auth/password/change`, {
-      email,
-      newPassword,
-    });
-
-    // Assuming the response contains a message indicating success
-    const { message } = response.data;
-
-    console.log(message);
-
-    return message;
-  } catch (error) {
-    if (error.response) {
-      throw new Error(error.response.data.message);
-    } else {
-      throw new Error('An error occurred while resetting the password');
-    }
-  }
-};
-
-
 //Send OTP
 export const sendResetOTP = async (email) => {
   try {
@@ -101,6 +77,33 @@ export const verifyOTP = async (email, otp) => {
     }
 
     throw new Error(backendError?.error || 'Failed to verify OTP. Please try again later.');
+  }
+};
+
+
+
+
+// Reset a user's password
+export const resetPassword = async (email, password) => {
+  try {
+    if (!password) {
+      throw new Error('Password is required');
+    }
+    const response = await axios.post(`${API_URL}/api/auth/password/change`, {
+      email,
+      newPassword : password,
+    });
+
+    const { message } = response.data;
+    console.log(message);
+    return message;
+
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error('An error occurred while resetting the password');
+    }
   }
 };
 

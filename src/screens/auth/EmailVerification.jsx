@@ -13,7 +13,7 @@ const EmailVerification = ({ navigation }) => {
         return emailRegex.test(email);
     };
 
-    const handleVerification = async() => {
+    const handleVerification = async () => {
         if (!validateEmail(email)) {
             alert('Please enter a valid email address');
             return;
@@ -22,15 +22,15 @@ const EmailVerification = ({ navigation }) => {
             const response = await sendResetOTP(email);
             console.log(response.message);
             navigation.navigate('ForgotPassword', { email });
-          } catch (error) {
+        } catch (error) {
             alert('Failed to send OTP. Please enter valid email');
-          } 
+        }
     }
 
     return (
         <SafeAreaView>
             <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%', backgroundColor: 'white' }}>
-            <BackArrowButton ReturnPage="Login" />
+                <BackArrowButton ReturnPage="Login" />
                 <View style={styles.container}>
                     <View style={styles.logoContainer}>
                         <Image
@@ -56,18 +56,9 @@ const EmailVerification = ({ navigation }) => {
                             autoCapitalize="none"
                         />
                     </View>
-
-
-
                     <TouchableOpacity style={styles.Submit_Button} onPress={handleVerification} >
                         <Text style={styles.buttonTextSubmit}>SUBMIT</Text>
                     </TouchableOpacity>
-
-
-
-
-
-
                 </View>
             </ScrollView>
         </SafeAreaView>
