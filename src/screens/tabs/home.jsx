@@ -52,7 +52,7 @@ const Home = ({ navigation }) => {
   }, []);
 
   const handleAddEvent = () => {
-    navigation.navigate('Event');
+    navigation.navigate('AddEvent');
   };
 
   return (
