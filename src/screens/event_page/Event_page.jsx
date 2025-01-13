@@ -87,6 +87,14 @@ const Event_page = ({ navigation, route }) => {
 
 
     const { id, hostedByUser } = route.params;
+    const eventID =id
+    const getToken = async () => {
+        const token = await AsyncStorage.getItem('token');
+        return token;
+    };
+    
+    // Usage
+    const token = getToken(); 
 
     console.log('eventHostedByUser', id, hostedByUser);
 
@@ -141,7 +149,60 @@ const Event_page = ({ navigation, route }) => {
     }, [id, refreshKey]);
     
 
-
+    const renderBottomBar = () => {
+        if (activeTab === 'media') {
+            return (
+                <View style={styles.bottomBar}>
+                    {!selectImage && eventHostedByUser && (
+                        <TouchableOpacity style={styles.uploadButton1} onPress={() => pickImages(eventID)}>
+                            <Text style={styles.uploadText}>Upload</Text>
+                        </TouchableOpacity>
+                    )}
+    
+                    {selectImage && eventHostedByUser && (
+                        <>
+                            <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
+                                <Text style={styles.uploadText}>Upload</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.deleteButton, { color: '#DA4F4F', flexDirection: 'row' }]}
+                                onPress={handleDeleteSelectedImages}
+                            >
+                                <Text style={styles.deleteText}>Delete</Text>
+                                <Image source={DeleteIcon} style={styles.deleteIcon} />
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+            );
+        } else {
+            return (
+                <View style={styles.bottomBar}>
+                    {loading ? (
+                        <Text>Loading...</Text>
+                    ) : (
+                        <TouchableOpacity
+                            style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }]}
+                            onPress={handleAddUserToEvent}
+                            disabled={loading} // Disable while loading
+                        >
+                            <Text style={[styles.imInText, isAttending && { color: 'white' }]}>
+                                {isAttending ? 'You are in!' : "I'm in!"}
+                            </Text>
+                            <Image source={ImInIcon} style={styles.imInIcon} />
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity style={styles.shareButton}>
+                        <Text style={styles.shareText}>Share</Text>
+                        <Image source={ShareIcon} style={styles.shareIcon} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
+                        <Image source={CommentIcon} style={styles.commentIcon} />
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+    };
 
     const formatEventDates = (startDate, endDate) => {
         const formattedStartDate = format(new Date(startDate), "yyyy MMMM 'from' h a"); // Escaped 'from'
@@ -495,6 +556,7 @@ const Event_page = ({ navigation, route }) => {
         }
     };
     
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>

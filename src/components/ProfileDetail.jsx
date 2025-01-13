@@ -14,8 +14,8 @@ export const ProfileDetail = ({ property, value,onPress }) => {
   
   const styles = StyleSheet.create({
     inputWrapper: {
-      width: '95%',
-      height: 45,
+      width: '85%',
+      height: 35,
       backgroundColor: '#fff',
       paddingHorizontal: 15,
       borderRadius: 22,

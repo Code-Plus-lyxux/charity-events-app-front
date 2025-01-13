@@ -26,6 +26,8 @@ const Add_event = ({navigation}) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching,setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Kandy','Kandy,Sri Lanka']);
+    const [token, setToken] = useState(null);
+     const [userId, setUserId] = useState(null);
 
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
@@ -37,8 +39,27 @@ const Add_event = ({navigation}) => {
         }));
     };
 
+    useEffect(() => {
+        const getToken = async () => {
+          try {
+            const storedToken = await AsyncStorage.getItem('token');
+            const storedUserId = await AsyncStorage.getItem('userId');
+            
+            if (storedToken) setToken(storedToken);
+            if (storedUserId) setUserId(storedUserId);
+          } catch (error) {
+            console.log('Error fetching token:', error);
+          }
+        };
+    
+        getToken();
+      }, []);
+    console.log('Add event:',token);
+    
+
     const submitEventDetails = async () => {
         // Check for missing details
+        
         const missingDetails = [];
         if (!eventDetails.eventName) missingDetails.push('Event Name');
         if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
