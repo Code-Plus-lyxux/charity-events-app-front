@@ -8,6 +8,7 @@ import EyeOffIcon from '../../assets/images/hide_password.png';
 import GoogleIcon from '../../assets/images/google.png';
 import UserIcon from '../../assets/images/user_icon.png';
 import { registerUser } from '../../api/auth';
+import CheckIcon from '../../assets/images/check_icon.png';
 
 const Sign_up = ({ navigation }) => {
   
@@ -57,8 +58,8 @@ const Sign_up = ({ navigation }) => {
       
 
     return (
-        <SafeAreaView>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%',backgroundColor: 'white' }}>
+        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignContent: 'center', backgroundColor: 'white' }}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%' }}>
                 <View style={styles.container}>
                     <View style={styles.logoContainer}>
                         <Image
@@ -140,12 +141,36 @@ const Sign_up = ({ navigation }) => {
                             />
                         </Pressable>     
                     </View>
+
+                    <View style={{ alignItems: 'flex-start', marginBottom: '35%' ,marginTop:'5%'}}>
+                            <View style={{ flexDirection: 'row' }}>
+                                <Image
+                                    source={CheckIcon}
+                                    style={styles.CheckIcon} 
+                                />
+                                <Text style={styles.instructions}>At least 8 characters</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row' }}>
+                                <Image
+                                    source={CheckIcon}
+                                    style={styles.CheckIcon} 
+                                />
+                                <Text style={styles.instructions}>At least 1 special character</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row' }}>
+                                <Image
+                                    source={CheckIcon}
+                                    style={styles.CheckIcon} 
+                                />
+                                <Text style={styles.instructions}>At least 1 uppercase letter and 1 lowercase letter</Text>
+                            </View>
+                        </View>
                   
                     <TouchableOpacity style={styles.Sign_Up_Button} onPress={handleSignUp}>
                             <Text style={styles.buttonTextLogin}>SIGN UP</Text>
                     </TouchableOpacity>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                    {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                         <View style={{ flex: 1, height: .7,marginLeft: 10, backgroundColor: '#000' }} />
                         <Text style={[styles.no_account, { marginHorizontal: 10 }]}>OR</Text>
                         <View style={{ flex: 1, height: .7, marginRight: 10, backgroundColor: '#000' }} />
@@ -157,7 +182,7 @@ const Sign_up = ({ navigation }) => {
                                 style={styles.icon}
                             />
                             <Text style={styles.buttonTextGoogle}>Sign in with Google</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.have_account}>Already have an account ? </Text>
@@ -189,12 +214,12 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         width: '70%',
-        height: '30%',
+        height: '40%',
         marginVertical:20
     },
     image: {
         width: '100%',
-        height: '110%',
+        height: '100%',
     },
     buttonTextLogin: {
         color: '#FFFFFF',
@@ -214,8 +239,6 @@ const styles = StyleSheet.create({
         borderRadius: 60,
         borderColor: '#00B894',
         borderWidth: 1,
-        marginBottom: 10,
-        marginTop: 30,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
@@ -272,7 +295,17 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#00B894',
         textDecorationLine: 'underline',
-    }
+    },
+    CheckIcon:{
+        width: 8,
+        height: 8,
+        marginTop:5
+    },
+    instructions:{
+        fontSize: 11,
+        color: '#000',
+        marginLeft: '5'
+    },
     
 });
 

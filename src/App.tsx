@@ -72,8 +72,7 @@ const App = () => {
 
         const isTesting = true; // Set this to true for testing purposes
 
-        //const testScreen = 'ResetPassword'; // Set this to the screen you want to test
-        const testScreen = 'Login'; // Set this to the screen you want to test
+       const testScreen = 'Tabs'; // Set this to the screen you want to test
 
 
         return (

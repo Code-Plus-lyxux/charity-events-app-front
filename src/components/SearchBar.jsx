@@ -14,7 +14,6 @@ const SearchBar = ({ value, onChangeText }) => {
         onChangeText={onChangeText}
       />
      </View>
-     <Image source={Search} style={styles.icon} />
     </View>
   );
 };

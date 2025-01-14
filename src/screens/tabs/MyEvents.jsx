@@ -5,7 +5,7 @@ import EventFilters from '../../components/EventFilters';
 import { getLoggedUser } from '../../api/user';
 import { useFocusEffect } from '@react-navigation/native';
 
-const MyEvents = () => {
+const MyEvents = ({navigation}) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -66,7 +66,7 @@ const MyEvents = () => {
         }}
       >
         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>My Events</Text>
-        <Pressable onPress={''}>
+        <Pressable onPress={() => navigation.navigate('AddEvent')}>
           <Text style={{ color: '#00554A', fontWeight: 'bold', fontSize: 16 }}>
             Add Event +
           </Text>

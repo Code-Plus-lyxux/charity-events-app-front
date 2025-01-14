@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import BackArrowButton from '../../components/BackArrowButton';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
+import BackArrowIcon from '../../components/BackArrowButton';
 import { verifyOTP } from '../../api/auth';
 import { sendResetOTP } from '../../api/auth';
 
@@ -45,8 +45,8 @@ const Forgot_Password = ({ navigation, route }) => {
         const otp = `${code1}${code2}${code3}${code4}`;
         try {
           const response = await verifyOTP(email, otp);
-          alert(response.message);
-          navigation.navigate('ResetPassword');
+            console.log(response.message);
+          navigation.navigate('ResetPassword', { email });
         } catch (error) {
           alert(error.message); 
         }
@@ -74,7 +74,9 @@ const Forgot_Password = ({ navigation, route }) => {
     return (
         <SafeAreaView>
             <ScrollView showsVerticalScrollIndicator={false} style={{ minHeight: '100%', backgroundColor: 'white' }}>
-                <BackArrowButton ReturnPage="Login" />
+                <TouchableOpacity onPress={() => navigation.goBack()} >
+                                    <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
+                                </TouchableOpacity>
                 <View style={styles.container}>
                     <Text style={styles.TitleText}>Enter Verification Code</Text>
 

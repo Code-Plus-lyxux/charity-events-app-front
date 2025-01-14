@@ -47,7 +47,7 @@ const EventCard = (props) => {
             <View style={styles.imageContainer}>
               {/* Use the first image from the images array */}
               <Image
-                source={{ uri: props.event.images[0] }} // Fetch first image from images array
+                source={{ uri: props.event.backgroundImage }} // Fetch first image from images array
                 style={styles.image}
                 resizeMode="cover"
               />

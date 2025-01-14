@@ -7,12 +7,12 @@ import CheckIcon from '../../assets/images/check_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
 import { resetPassword } from '../../api/auth';
 
-const Reset_password = ({ navigation }) => {
+const Reset_password = ({ navigation, route }) => {
     const [newPassword, setNewPassword] = useState('');
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-    const email = 'user@gmail.com'
+    const { email } = route.params;
 
 
     const handleReset = async (email, newPassword, confirmPassword, navigation) => {
@@ -43,9 +43,18 @@ const Reset_password = ({ navigation }) => {
             },
           ]);
         } catch (error) {
-          Alert.alert('Error', error.message); // Show error message
+          console.error('Reset password error:', error);
+          const { response } = error;   
+          console.log(response);
+      
+          if (error.response && error.response.data && error.response.data.message) {
+            Alert.alert('Error', error.response.data.message); // Show error message
+          } else {
+            Alert.alert('Error', 'An unexpected error occurred. Please try again later.');
+          }
         }
       };
+      
       
 
     return (

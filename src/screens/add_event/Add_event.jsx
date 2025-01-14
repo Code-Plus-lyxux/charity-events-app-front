@@ -10,6 +10,8 @@ import { AboutEvent } from '../../components/AboutEvent';
 import DateTimePickerComponent from '../../components/DateTimePicker';
 import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUploadPortal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../constants/api';
+
 
 const Add_event = ({navigation}) => {
 
@@ -24,7 +26,7 @@ const Add_event = ({navigation}) => {
     });    
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching,setActiveLocationSearching] = useState(false);
-    const [suggestions, setSuggestions] = useState(['Kandy','Kandy,Sri Lanka']);
+    const [suggestions, setSuggestions] = useState(['Colombo, Sri Lanka','Kandy, Sri Lanka', 'Homagama, Sri Lanka', 'Galle, Sri Lanka', 'Jaffna, Sri Lanka']);
     const [token, setToken] = useState(null);
      const [userId, setUserId] = useState(null);
 
@@ -87,9 +89,16 @@ const Add_event = ({navigation}) => {
             status: parseInt(eventDetails.status, 0), // Convert status to a number
         };
 
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token', token);
+
+        if (!token) {
+            throw new Error('No token found');
+        }
+
         try {
             const response = await axios.post(
-                'http://10.0.3.2:5001/api/events/add',
+                `${API_URL}/api/events/add`,
                 formattedEventDetails,
                 {
                     headers: {
@@ -174,7 +183,7 @@ const Add_event = ({navigation}) => {
     
         
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%',marginBottom: '24',paddingHorizontal: 26,}}>
-                <TouchableOpacity onPress={() => navigation.navigate('Tabs')}>
+                <TouchableOpacity onPress={() => navigation.goBack()} >
                     <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
                 </TouchableOpacity>
                 <Text style={[styles.AddEventText]}>Add Event</Text>
