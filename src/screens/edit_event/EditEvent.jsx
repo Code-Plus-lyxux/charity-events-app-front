@@ -11,7 +11,7 @@ import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUpl
 import { UploadCover } from '../../components/UploadCover';
 import Hero from '../../assets/images/event-cover.png';
 import axios from 'axios';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const EditEvent = ({ navigation,route }) => {
      const [eventDetails, setEventDetails] = useState({
@@ -26,8 +26,8 @@ const EditEvent = ({ navigation,route }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching, setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Kandy', 'Kandy,Sri Lanka']);
-    //const eventID = route.params?.eventID;
-    const eventID = '677f59ac0f5d27206ba283d9'
+    const eventID = route.params?.eventID;
+    
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
     
@@ -82,12 +82,13 @@ const EditEvent = ({ navigation,route }) => {
 
     const getEventById = async () => {
         try {
+            const token = await AsyncStorage.getItem('token');
             const response = await axios.get(
                 `http://10.0.3.2:5001/api/events/${eventID}`,
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`,
+                        'Authorization': `Bearer ${token}`,
                     },
                 }
             );
@@ -143,13 +144,14 @@ const EditEvent = ({ navigation,route }) => {
         };
     
         try {
+            const token = await AsyncStorage.getItem('token');
             const response = await axios.put(
                 'http://10.0.3.2:5001/api/events/update',
                 formattedEventDetails,
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjM5NjA1MCwiZXhwIjoxNzM2NDM5MjUwfQ.qP9D5PWN-G5gw1h4DjtKuKxOxmbz4ks1pV4uMrvNiMw`, // Replace YOUR_ACCESS_TOKEN with the actual token
+                        'Authorization': `Bearer ${token}`, // Replace YOUR_ACCESS_TOKEN with the actual token
                     },
                 }
             );
@@ -159,7 +161,10 @@ const EditEvent = ({ navigation,route }) => {
             Alert.alert('Success', 'Event updated successfully!', [
                 {
                     text: 'OK',
-                    onPress: () => navigation.navigate('EventPage', { hostedByUser: true }),
+                    onPress:() => navigation.navigate('EventPage', { 
+                        id: route.params?.id , 
+                        hostedByUser: route.params?.hostedByUser 
+                      }),
                 },
             ]);
         } catch (error) {

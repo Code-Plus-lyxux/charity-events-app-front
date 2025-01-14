@@ -94,7 +94,7 @@ const UserProfile = ({ navigation }) => {
             </Pressable>
             <View style={styles.container}>
                 <Image
-                    source={user.image ? { uri: user.image } : user_image}
+                    source={user.profileImage ? { uri: `http://10.0.3.2:5001${user.profileImage}` } : user_image}
                     resizeMode="contain"
                     style={styles.imageStyle}
                 />
