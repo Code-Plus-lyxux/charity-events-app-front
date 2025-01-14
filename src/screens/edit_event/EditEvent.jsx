@@ -32,6 +32,7 @@ const EditEvent = ({ navigation, route }) => {
 
     const [isLoading, setIsLoading] = useState(false);
     //const eventID = '677f59ac0f5d27206ba283d9'
+
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
 
@@ -110,6 +111,7 @@ const EditEvent = ({ navigation, route }) => {
             throw new Error('No token found');
         }
         try {
+            const token = await AsyncStorage.getItem('token');
             const response = await axios.get(
                 `${API_URL}/api/events/${eventID}`,
                 {
@@ -142,82 +144,82 @@ const EditEvent = ({ navigation, route }) => {
 
 
     const updateEventDetails = async () => {
-        // // Check for missing details
-        // const missingDetails = [];
-        // if (!eventDetails.eventName) missingDetails.push('Event Name');
-        // if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
-        // if (!eventDetails.endDateTime) missingDetails.push('End Date/Time');
-        // if (!eventDetails.location) missingDetails.push('Location');
-        // if (!eventDetails.aboutEvent) missingDetails.push('About Event');
 
-        // if (missingDetails.length > 0) {
-        //     // Show alert for missing details
-        //     Alert.alert(
-        //         'Missing Details',
-        //         `Please add the following details:\n${missingDetails.join('\n')}`,
-        //         [{ text: 'OK', style: 'cancel' }]
-        //     );
-        //     return; // Exit function if validation fails
-        // }
+        // Check for missing details
+        const missingDetails = [];
+        if (!eventDetails.eventName) missingDetails.push('Event Name');
+        if (!eventDetails.startDateTime) missingDetails.push('Start Date/Time');
+        if (!eventDetails.endDateTime) missingDetails.push('End Date/Time');
+        if (!eventDetails.location) missingDetails.push('Location');
+        if (!eventDetails.aboutEvent) missingDetails.push('About Event');
+    
+        if (missingDetails.length > 0) {
+            // Show alert for missing details
+            Alert.alert(
+                'Missing Details',
+                `Please add the following details:\n${missingDetails.join('\n')}`,
+                [{ text: 'OK', style: 'cancel' }]
+            );
+            return; // Exit function if validation fails
+        }
+    
+        // Format event details for the API
+        const formattedEventDetails = {
+            ...eventDetails,
+            eventId: eventID, // Include the eventId explicitly
+            startDate: eventDetails.startDateTime, // Map startDateTime to startDate
+            endDate: eventDetails.endDateTime, // Map endDateTime to endDate
+            backgroundImage: eventDetails.backgroundImage || null, // Handle null backgroundImage
+            status: parseInt(eventDetails.status, 10), // Ensure status is a number
+        };
+    
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const response = await axios.put(
+                'http://10.0.3.2:5001/api/events/update',
+                formattedEventDetails,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`, // Replace YOUR_ACCESS_TOKEN with the actual token
+                    },
+                }
+            );
+            console.log('Event updated successfully:', response.data);
+    
+            // Show success alert and navigate to EventPage with route parameter
+            Alert.alert('Success', 'Event updated successfully!', [
+                {
+                    text: 'OK',
+                    onPress:() => navigation.navigate('EventPage', { 
+                        id: route.params?.id , 
+                        hostedByUser: route.params?.hostedByUser 
+                      }),
+                },
+            ]);
+        } catch (error) {
+            console.error(
+                'Error updating event:',
+                error.response ? error.response.data : error.message
+            );
+    
+            // Show error alert for API issues
+            Alert.alert(
+                'Error',
+                error.response ? error.response.data.message || 'Failed to update event' : 'Something went wrong',
+                [{ text: 'OK', style: 'cancel' }]
+            );
+        }
+    };
+    
+    const updateBackgroundImage = (uri) => {
+        setEventDetails((prevDetails) => ({
+          ...prevDetails,
+          backgroundImage: uri,
+        }));
+        
+      };
 
-        // // Format event details for the API
-        // const formattedEventDetails = {
-        //     ...eventDetails,
-        //     eventId: eventID, // Include the eventId explicitly
-        //     startDate: eventDetails.startDateTime, // Map startDateTime to startDate
-        //     endDate: eventDetails.endDateTime, // Map endDateTime to endDate
-        //     backgroundImage: eventDetails.backgroundImage || null, // Handle null backgroundImage
-        //     status: parseInt(eventDetails.status, 10), // Ensure status is a number
-        // };
-
-        setIsLoading(true);
-
-  const formattedEventDetails = {
-    eventId: eventID,
-    eventName: name,
-    location: eventLocation,
-    startDate: start,
-    endDate: end,
-    aboutEvent: about,
-    backgroundImage: image,
-  };
-  console.log('Formatted event details:', formattedEventDetails);
-  //console.log('Event ID:', eventId);
-
-  try {
-    const token = await AsyncStorage.getItem('token');
-    if (!token) {
-      throw new Error('No token found');
-    }
-
-    const response = await axios.put(
-      `${API_URL}/api/events/update`,
-      formattedEventDetails,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log('Event updated successfully:', response.data);
-
-    Alert.alert('Success', 'Event updated successfully!', [
-      { text: 'OK', onPress: () => navigation.navigate('EventPage', { hostedByUser: true }) },
-    ]);
-  } catch (error) {
-    console.error('Error updating event:', error);
-
-    Alert.alert(
-      'Error',
-      error?.response?.data?.message || 'Failed to update event. Please try again.',
-      [{ text: 'OK', style: 'cancel' }]
-    );
-  } finally {
-    setIsLoading(false);
-  }
-};
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>

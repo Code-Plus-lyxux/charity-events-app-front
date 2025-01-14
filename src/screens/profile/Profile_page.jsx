@@ -17,16 +17,17 @@ import { API_URL } from '../../constants/api';
 
 const Profile_page = ({ navigation }) => {
     const [user, setUser] = useState({
-        name: 'Lucifer Barret',
-        email: 'lucilebarret@gmail.com',
-        about: 'Student',
-        location: 'Galle',
-        phoneNumber: '0714516503',
+        fullname: '',
+        email: '',
+        about: '',
+        location: '',
+        mobile: '',
+        imageUri:'',
       });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentDetail, setCurrentDetail] = useState({ property: '', value: '' });
     const [newValue, setNewValue] = useState('');
-    const [imageUri, setImageUri] = useState(null);// Set default image
+   
     
     
     const [loading, setLoading] = useState(true);
@@ -43,11 +44,12 @@ const Profile_page = ({ navigation }) => {
         // Handle successful response
         setUser(prevUser => ({
             ...prevUser,  // Preserve existing fields
-            name: userData.fullName,
+            fullname: userData.fullName,
             about: userData.about,
             location: userData.location,
             email: userData.email,
-            phoneNumber: userData.mobile
+            mobile: userData.mobile,
+            imageUri: userData.profileImage,
         }));
 
         } catch (error) {
@@ -63,32 +65,39 @@ const Profile_page = ({ navigation }) => {
     }, []);
 
 
-    const submitProfileDetails = async (name,email,about,location,phoneNumber) => {
+    const submitProfileDetails = async (fullName, about, location, mobile) => {
         const formattedProfileDetails = {
-            name,
-            email,
+            fullName,
             about,
             location,
-            phoneNumber,
+            mobile
         };
-        fullName, mobile, password,about,location
+        console.log('Formatted Profile Details:', formattedProfileDetails);
         try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+    
             const response = await axios.put(
                 `${API_URL}/api/user/profile`, // Update the endpoint as needed
                 formattedProfileDetails,
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer YOUR_JWT_TOKEN', // Replace with a valid token
+                        'Authorization': `Bearer ${token}`,
                     },
                 }
             );
             console.log('Profile updated:', response.data);
         } catch (error) {
-            console.error('Error updating profile:', error.response ? error.response.data : error.message);
+            console.error(
+                'Error updating profile:', 
+                error.response ? error.response.data : error.message
+            );
         }
     };
-
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
 
@@ -96,47 +105,36 @@ const Profile_page = ({ navigation }) => {
     const handleProfileDetailPress = (property, value) => {
         setCurrentDetail({ property, value });
         setNewValue(value);
-        setIsModalVisible(true);
-        submitProfileDetails();
+        setIsModalVisible(true);        
     };
 
     // Save Updated Detail
-    const handleSave = () => {
-        switch (currentDetail.property) {
-            case 'Name':
-                setUser(prevUser => ({
-                    ...prevUser,
-                    name: newValue
-                }));
-                break;
-            case 'Email':
-                setUser(prevUser => ({
-                    ...prevUser,
-                    email: newValue
-                }));
-                break;
-            case 'About':
-                setUser(prevUser => ({
-                    ...prevUser,
-                    about: newValue
-                }));
-                break;
-            case 'Location':
-                setUser(prevUser => ({
-                    ...prevUser,
-                    location: newValue
-                }));
-                break;
-            case 'Phone Number':
-                setUser(prevUser => ({
-                    ...prevUser,
-                    phoneNumber: newValue
-                }));
-                break;
+    const handleSave = async () => {
+        // Remove password from the update payload
+        const { password, ...updatedUserDetails } = {
+            ...user,
+            [currentDetail.property]: newValue
+        };
+    
+        // Update user state before sending the request
+        setUser(updatedUserDetails);
+    
+        try {
+            await submitProfileDetails(
+                updatedUserDetails.fullname,
+                updatedUserDetails.about,
+                updatedUserDetails.location,
+                updatedUserDetails.mobile,
+                updatedUserDetails.imageUri
+            );
+            console.log('Updated User Details:', updatedUserDetails)
+            console.log('Profile updated successfully');
+        } catch (error) {
+            console.error('Error saving details:', error);
         }
+    
         setIsModalVisible(false);
     };
-
     // Trigger slide-up animation when modal is shown
     useEffect(() => {
         if (isModalVisible) {
@@ -155,19 +153,70 @@ const Profile_page = ({ navigation }) => {
     }, [isModalVisible]);
 
     // Open Image Gallery and Crop Image
-    const handleEditImage = () => {
+    const handleEditImage = async () => {
         ImagePicker.launchImageLibrary({
             mediaType: 'photo',
             quality: 0.5,
-        }, response => {
+        }, async (response) => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
             } else if (response.errorCode) {
                 console.log('ImagePicker Error: ', response.errorMessage);
             } else {
-                setImageUri(response.assets[0].uri);
+                const imageUri = response.assets[0].uri;
+    
+                // Display alert to confirm upload
+                Alert.alert(
+                    "Update Profile Picture",
+                    "Are you sure you want to update your profile picture?",
+                    [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                            text: "Yes", onPress: () => uploadProfileImage(imageUri)
+                        }
+                    ]
+                );
             }
         });
+    };
+    
+    const uploadProfileImage = async (imageUri) => {
+        const formData = new FormData();
+    
+        formData.append('profileImage', {
+            uri: imageUri,
+            type: 'image/jpeg', // Adjust based on file type if necessary
+            name: imageUri.split('/').pop(), // Use file name from the path
+        });
+    
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+    
+            const response = await axios.put('http://10.0.3.2:5001/api/user/profile', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            
+            // Update the imageUri in state on success
+            const updatedImageUrl = response.data.user.profileImage;
+
+            setUser(prevState => ({
+                ...prevState,
+                imageUri: updatedImageUrl,
+            }));
+            console.log('user.imageuri: ',user.imageUri)
+            console.log('Profile updated successfully:', response.data);
+            Alert.alert("Success", "Profile picture updated successfully!");
+        } catch (error) {
+            console.error('Error uploading profile image:', error.response || error);
+            Alert.alert("Error", "Failed to update profile picture.");
+        }
     };
     
     const handleLogout = () => {
@@ -200,19 +249,19 @@ const Profile_page = ({ navigation }) => {
                 <View style={styles.container}>
                     <Text style={styles.TitleText}>Profile</Text>
                     <Image 
-                        source={imageUri ? { uri: imageUri } : user_image} 
+                        source={user.imageUri ? { uri: `http://10.0.3.2:5001${user.imageUri}` } : user_image} 
                         style={styles.circularImg} 
                         />
                     <TouchableOpacity onPress={handleEditImage}>
                         <Image source={edit_icon} resizeMode="contain" style={styles.iconStyle} />
                     </TouchableOpacity>
 
-                    <Text style={styles.NameText}>{user.name}</Text>
+                    <Text style={styles.fullnameText}>{user.fullname}</Text>
                     <Text style={styles.EmailText}>{user.email}</Text>
-                    <ProfileDetail property="Name" value={user.name} onPress={() => handleProfileDetailPress('Name', user.name)} />
-                    <ProfileDetail property="About" value={user.about} onPress={() => handleProfileDetailPress('About', user.about)} />
-                    <ProfileDetail property="Location" value={user.location} onPress={() => handleProfileDetailPress('Location', user.location)} />
-                    <ProfileDetail property="Phone Number" value={user.phoneNumber} onPress={() => handleProfileDetailPress('Phone Number', user.phoneNumber)} />
+                    <ProfileDetail property="Name" value={user.fullname} onPress={() => handleProfileDetailPress('fullname', user.fullname)} />
+                    <ProfileDetail property="About" value={user.about} onPress={() => handleProfileDetailPress('about', user.about)} />
+                    <ProfileDetail property="Location" value={user.location} onPress={() => handleProfileDetailPress('location', user.location)} />
+                    <ProfileDetail property="Phone Number" value={user.mobile} onPress={() => handleProfileDetailPress('mobile', user.mobile)} />
 
                     <TouchableOpacity style={styles.Logout_Button} onPress={handleLogout}>
                         <Text style={styles.buttonTextLogout}>LOGOUT</Text>
@@ -269,7 +318,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#000',
     },
-    NameText: {
+    fullnameText: {
         fontSize: 16,
         fontWeight: '400',
         color: '#000',
