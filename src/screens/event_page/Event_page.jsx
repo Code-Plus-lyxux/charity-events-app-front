@@ -41,6 +41,7 @@ import { addUserToEvent } from '../../api/events';
 import { removeUserFromEvent } from '../../api/events';
 import { getLoggedUser } from '../../api/user';
 import { format } from 'date-fns';
+import { API_URL } from '../../constants/api';
 
 
 const { height } = Dimensions.get('window');
@@ -87,14 +88,14 @@ const Event_page = ({ navigation, route }) => {
 
 
     const { id, hostedByUser } = route.params;
-    const eventID =id
+    const eventID = id
     const getToken = async () => {
         const token = await AsyncStorage.getItem('token');
         return token;
     };
-    
+
     // Usage
-    const token = getToken(); 
+    const token = getToken();
 
     console.log('eventHostedByUser', id, hostedByUser);
 
@@ -102,11 +103,11 @@ const Event_page = ({ navigation, route }) => {
         0: 'Hosting',
         1: 'Upcoming',
         2: 'Past',
-    };
+    }
 
     useEffect(() => {
         let isMounted = true;
-    
+
         const fetchData = async () => {
             try {
                 // Fetch user data
@@ -115,13 +116,14 @@ const Event_page = ({ navigation, route }) => {
                     setUser(userData);
                     console.log('User:', userData);
                 }
-    
+
+
                 // Fetch event data
                 const eventData = await getEventById(id);
                 if (isMounted) {
                     setEvent(eventData);
                 }
-    
+
                 // Check if the user is attending the event
                 if (isMounted && eventData?.attendUsers) {
                     const isUserAttending = eventData.attendUsers.includes(userData?._id);
@@ -140,14 +142,22 @@ const Event_page = ({ navigation, route }) => {
                 }
             }
         };
-    
+
         fetchData();
-    
+
         return () => {
             isMounted = false;
         };
     }, [id, refreshKey]);
-    
+
+
+    const getHostedByUser = (event) => {
+        return user?._id === event?.userId._id;
+    };
+
+    console.log(user?._id, event?.userId._id);
+    console.log('Event Hosted by User:', getHostedByUser(event));
+
 
     const renderBottomBar = () => {
         if (activeTab === 'media') {
@@ -158,7 +168,7 @@ const Event_page = ({ navigation, route }) => {
                             <Text style={styles.uploadText}>Upload</Text>
                         </TouchableOpacity>
                     )}
-    
+
                     {selectImage && eventHostedByUser && (
                         <>
                             <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
@@ -182,11 +192,15 @@ const Event_page = ({ navigation, route }) => {
                         <Text>Loading...</Text>
                     ) : (
                         <TouchableOpacity
-                            style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }]}
+                            style={[styles.imInButton, isAttending && { borderColor: '#00B894', backgroundColor: '#00B894' }, getHostedByUser(event) && styles.disabledButton]}
                             onPress={handleAddUserToEvent}
-                            disabled={loading} // Disable while loading
+                            disabled={getHostedByUser(event)}
                         >
-                            <Text style={[styles.imInText, isAttending && { color: 'white' }]}>
+                            <Text style={[styles.imInText, isAttending && { color: 'white' },
+                            getHostedByUser(event) && {
+                                color: '#00b893',
+                                opacity: 0.7,
+                            }]}>
                                 {isAttending ? 'You are in!' : "I'm in!"}
                             </Text>
                             <Image source={ImInIcon} style={styles.imInIcon} />
@@ -205,25 +219,25 @@ const Event_page = ({ navigation, route }) => {
     };
 
     const formatEventDates = (startDate, endDate) => {
-        const formattedStartDate = format(new Date(startDate), "yyyy MMMM 'from' h a"); // Escaped 'from'
-        const formattedEndDate = format(new Date(endDate), "h a"); // 12 PM
-        
+        const formattedStartDate = format(new Date(startDate), "yyyy MMMM dd 'from' h:mm a"); // Escaped 'from'
+        const formattedEndDate = format(new Date(endDate), "h:mm a");
+
         return `${formattedStartDate} to ${formattedEndDate}`;
     };
-    
-    const startDate = "2025-02-03T09:00:00.000Z";
+
+    const startDate = "2025-02-03T09:30:00.000Z";
     const endDate = "2025-02-03T12:00:00.000Z";
-    
+
     console.log(formatEventDates(startDate, endDate));
-    
-    
+
+
 
     // Add comment
     const handleAddComment = async () => {
         if (comment.trim() === '') {
             return;
         }
-      
+
 
         try {
             const newComment = await addCommentToEvent(id, comment);
@@ -264,8 +278,8 @@ const Event_page = ({ navigation, route }) => {
         }
     }, [modalVisible]);
 
-    
-   
+
+
     //I'm in button
     const handleAddUserToEvent = async () => {
         if (loading) return;
@@ -301,24 +315,24 @@ const Event_page = ({ navigation, route }) => {
 
     if (loading) {
         return (
-           
-                <Text>Loading...</Text>
-            
+
+            <Text>Loading...</Text>
+
         );
     }
 
     if (loadingUser || !user) {
         return (
-           
-                <Text>Loading...</Text>
-            
+
+            <Text>Loading...</Text>
+
         );
     }
 
     if (loadingAttend) {
         return (
-                <Text>Loading user status...</Text>
-           
+            <Text>Loading user status...</Text>
+
         );
     }
 
@@ -339,11 +353,11 @@ const Event_page = ({ navigation, route }) => {
 
     const handleDeleteSelectedImages = async () => {
         let allImages = [];
-    
+
         const getEventImagesById = async (eventID) => {
             try {
                 const response = await axios.get(
-                    `http://10.0.3.2:5001/api/events/${eventID}`,
+                    `${API_URL}/api/events/${eventID}`,
                     {
                         headers: {
                             'Content-Type': 'application/json',
@@ -351,12 +365,12 @@ const Event_page = ({ navigation, route }) => {
                         },
                     }
                 );
-    
+
                 const data = response.data;
-    
+
                 // Filter out selected images
                 allImages = data.images.filter((image) => !selectedImages.includes(image));
-    
+
                 console.log('Filtered Images:', allImages);
             } catch (error) {
                 console.error(
@@ -365,11 +379,11 @@ const Event_page = ({ navigation, route }) => {
                 );
             }
         };
-    
+
         const deleteImages = async (eventID) => {
             try {
                 await axios.put(
-                    `http://10.0.3.2:5001/api/events/update`,
+                    `${API_URL}/api/events/update`,
                     {
                         eventId: eventID,
                         images: allImages,
@@ -381,7 +395,7 @@ const Event_page = ({ navigation, route }) => {
                         },
                     }
                 );
-    
+
                 console.log('Updated Images:', allImages);
             } catch (error) {
                 console.error(
@@ -390,14 +404,14 @@ const Event_page = ({ navigation, route }) => {
                 );
             }
         };
-    
+
         await getEventImagesById(eventID);
         await deleteImages(eventID);
-    
+
         // Trigger media tab refresh
         setRefreshMediaTab(prev => !prev);
     };
-    
+
 
     const pickImages = async (eventID) => {
         launchImageLibrary(
@@ -440,7 +454,7 @@ const Event_page = ({ navigation, route }) => {
                     try {
                         // Upload images
                         const uploadResponse = await axios.post(
-                            'http://10.0.3.2:5001/api/events/upload-images',
+                            '${API_URL}/api/events/upload-images',
                             formData,
                             {
                                 headers: {
@@ -463,7 +477,7 @@ const Event_page = ({ navigation, route }) => {
                             };
 
                             const updateResponse = await axios.put(
-                                'http://10.0.3.2:5001/api/events/update',
+                                '${API_URL}/api/events/update',
                                 formattedEventDetails,
                                 {
                                     headers: {
@@ -476,7 +490,7 @@ const Event_page = ({ navigation, route }) => {
                             if (updateResponse.status === 200) {
                                 Alert.alert('Success', 'Event updated successfully with images');
                                 // Refresh media tab after successful upload
-                                setRefreshMediaTab((prev) => !prev); 
+                                setRefreshMediaTab((prev) => !prev);
                             } else {
                                 Alert.alert('Error', 'Failed to update the event');
                             }
@@ -494,8 +508,8 @@ const Event_page = ({ navigation, route }) => {
                 }
             }
         );
-        
-        
+
+
     };
 
 
@@ -523,7 +537,15 @@ const Event_page = ({ navigation, route }) => {
                     {eventHostedByUser && (
                         <TouchableOpacity
                             style={styles.editIconWrapper}
-                            onPress={() => navigation.navigate('EditEvent')}
+                            onPress={() => navigation.navigate('EditEvent', {
+                                eventID: event._id,
+                                eventName: event.eventName,
+                                location: event.location,
+                                startDate: event.startDate,
+                                endDate: event.endDate,
+                                aboutEvent: event.aboutEvent,
+
+                            })}
                         >
                             <Image source={EditIcon} style={styles.editIcon} />
                         </TouchableOpacity>
@@ -587,12 +609,12 @@ const Event_page = ({ navigation, route }) => {
                                     onChangeText={setComment}
                                 />
                                 {loading ? (
-                                            <Text>Loading...</Text>
-                                          ) : (
-                                <TouchableOpacity onPress={handleAddComment}>
-                                    <Image source={SendIcon} style={styles.sendIcon} setRefreshKey={setRefreshKey}/>
-                                </TouchableOpacity>
-                                          )}
+                                    <Text>Loading...</Text>
+                                ) : (
+                                    <TouchableOpacity onPress={handleAddComment}>
+                                        <Image source={SendIcon} style={styles.sendIcon} setRefreshKey={setRefreshKey} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
 
@@ -905,9 +927,12 @@ const styles = StyleSheet.create({
         width: 16,
         height: 16,
     },
+    disabledButton: {
+        borderColor: '#00b893',
+        opacity: 0.5,
+    },
 
 });
 
 
 export default Event_page;
-

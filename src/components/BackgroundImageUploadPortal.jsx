@@ -5,6 +5,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import GalleryImportIcon from '../assets/images/gallery-import.png';
 import UploadIcon from '../assets/images/upload_icon.png';
 import axios from 'axios';
+import { API_URL } from '../constants/api';
 
 export const BackgroundImageUploadPortal = ({onBackgroundImageChange,previousBackgroundImage}) => {
   const [selectedImage, setSelectedImage] = useState('');
@@ -37,7 +38,7 @@ export const BackgroundImageUploadPortal = ({onBackgroundImageChange,previousBac
         });
         
         const response = await axios.post(
-          'http://10.0.3.2:5001/api/events/upload-images',
+          `${API_URL}/api/events/upload-images`,
           formData,
           {
             headers: {
