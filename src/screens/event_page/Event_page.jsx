@@ -42,7 +42,7 @@ import { removeUserFromEvent } from '../../api/events';
 import { getLoggedUser } from '../../api/user';
 import { format } from 'date-fns';
 import { API_URL } from '../../constants/api';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height } = Dimensions.get('window');
 
@@ -53,11 +53,9 @@ const Event_page = ({ navigation, route }) => {
     const [comment, setComment] = useState('');
     const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(4);
     const [selectImage, setSelectImage] = useState(false);
-
+    const [coverImage, setCoverImage] = useState(false)
     const [selectedImages, setSelectedImages] = useState([]);
     const [refreshMediaTab, setRefreshMediaTab] = useState(false);
-    //const eventID = '677f536a0f5d27206ba283d1'
-    //const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQ3OTI3NiwiZXhwIjoxNzM2NTY1Njc2fQ.kUa6pxJH81aJ_u4J5t2NYyi79iEmz0-7MLl0pNRXneQ'
     const [event, setEvent] = useState(null);
     const [comments, setComments] = useState([]);
     const [isAttending, setIsAttending] = useState(false);
@@ -71,10 +69,6 @@ const Event_page = ({ navigation, route }) => {
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
 
-    // const handleSelectImage = (state) => {
-    //     setSelectImage(state);
-    //     console.log('Select Mode:', state ? 'Enabled' : 'Disabled');
-    // };
 
     const handleSelectImage = (images) => {
         setSelectImage(true);
@@ -106,25 +100,27 @@ const Event_page = ({ navigation, route }) => {
     }
 
     useEffect(() => {
+        setEvent(null);  // Reset event data
+        setUser(null);   // Reset user data
+        setLoading(true);  // Reset loading states if necessary
+        setLoadingUser(true);
+        setLoadingAttend(true);
+    
         let isMounted = true;
-
+    
         const fetchData = async () => {
             try {
-                // Fetch user data
                 const userData = await getLoggedUser();
                 if (isMounted) {
                     setUser(userData);
                     console.log('User:', userData);
                 }
-
-
-                // Fetch event data
+    
                 const eventData = await getEventById(id);
                 if (isMounted) {
                     setEvent(eventData);
                 }
-
-                // Check if the user is attending the event
+    
                 if (isMounted && eventData?.attendUsers) {
                     const isUserAttending = eventData.attendUsers.includes(userData?._id);
                     setIsAttending(isUserAttending);
@@ -142,9 +138,9 @@ const Event_page = ({ navigation, route }) => {
                 }
             }
         };
-
+    
         fetchData();
-
+    
         return () => {
             isMounted = false;
         };
@@ -171,7 +167,7 @@ const Event_page = ({ navigation, route }) => {
 
                     {selectImage && eventHostedByUser && (
                         <>
-                            <TouchableOpacity style={styles.uploadButton2} onPress={pickImage}>
+                            <TouchableOpacity style={styles.uploadButton2} onPress={()=>pickImages(eventID)}>
                                 <Text style={styles.uploadText}>Upload</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -346,14 +342,14 @@ const Event_page = ({ navigation, route }) => {
                 </ScrollView>
             );
         } else if (activeTab === 'media') {
-            return <Media_tab eventHostedByUser={eventHostedByUser} no_of_UploadedImages={no_of_UploadedImages} onSelectImage={handleSelectImage} />;
+            return <Media_tab eventHostedByUser={eventHostedByUser} eventID={eventID} no_of_UploadedImages={no_of_UploadedImages} onSelectImage={handleSelectImage} refreshMediaTab={refreshMediaTab}/>;
         }
     };
 
 
     const handleDeleteSelectedImages = async () => {
         let allImages = [];
-
+        const token = await AsyncStorage.getItem('token');
         const getEventImagesById = async (eventID) => {
             try {
                 const response = await axios.get(
@@ -381,6 +377,7 @@ const Event_page = ({ navigation, route }) => {
         };
 
         const deleteImages = async (eventID) => {
+            const token = await AsyncStorage.getItem('token');
             try {
                 await axios.put(
                     `${API_URL}/api/events/update`,
@@ -450,11 +447,12 @@ const Event_page = ({ navigation, route }) => {
                             type: image.type,
                         });
                     });
-
+                    const token = await AsyncStorage.getItem('token');
                     try {
                         // Upload images
+
                         const uploadResponse = await axios.post(
-                            '${API_URL}/api/events/upload-images',
+                            `${API_URL}/api/events/upload-images`,
                             formData,
                             {
                                 headers: {
@@ -463,7 +461,7 @@ const Event_page = ({ navigation, route }) => {
                                 },
                             }
                         );
-
+                        
                         if (uploadResponse.status === 200 && uploadResponse.data.files?.length > 0) {
                             // Extract the URLs of the uploaded images
                             const uploadedImageUrls = uploadResponse.data.files.map((file) => file.url);
@@ -477,7 +475,7 @@ const Event_page = ({ navigation, route }) => {
                             };
 
                             const updateResponse = await axios.put(
-                                '${API_URL}/api/events/update',
+                                `${API_URL}/api/events/update`,
                                 formattedEventDetails,
                                 {
                                     headers: {
@@ -485,8 +483,9 @@ const Event_page = ({ navigation, route }) => {
                                         Authorization: `Bearer ${token}`,
                                     },
                                 }
+                                
                             );
-
+                            //console.log("token 2: ",token);
                             if (updateResponse.status === 200) {
                                 Alert.alert('Success', 'Event updated successfully with images');
                                 // Refresh media tab after successful upload
@@ -508,12 +507,10 @@ const Event_page = ({ navigation, route }) => {
                 }
             }
         );
-
+         // Trigger media tab refresh
+         setRefreshMediaTab(prev => !prev);
 
     };
-
-
-
 
 
 
@@ -521,10 +518,8 @@ const Event_page = ({ navigation, route }) => {
         <SafeAreaView style={{ flex: 1 }}>
 
             <View style={styles.container}>
-                <View style={styles.imageWrapper}>
-
-
-                    <Image source={{ uri: event.images[0] }} resizeMode="cover" style={styles.coverImage} />
+                <View style={styles.imageWrapper}>               
+                    <Image source={{uri:event.backgroundImage}} resizeMode="cover" style={styles.coverImage} />                 
                     <View style={styles.overlay} />
                     <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.backIconWrapper}>
                         <Image

@@ -6,6 +6,7 @@ import GalleryImportIcon from '../assets/images/gallery-import.png';
 import UploadIcon from '../assets/images/upload_icon.png';
 import axios from 'axios';
 import { API_URL } from '../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const BackgroundImageUploadPortal = ({onBackgroundImageChange,previousBackgroundImage}) => {
   const [selectedImage, setSelectedImage] = useState('');
@@ -37,13 +38,14 @@ export const BackgroundImageUploadPortal = ({onBackgroundImageChange,previousBac
           console.log('Value:', part[1]);
         });
         
+        const token = await AsyncStorage.getItem('token');
         const response = await axios.post(
           `${API_URL}/api/events/upload-images`,
           formData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQzOTgxMSwiZXhwIjoxNzM2NDgzMDExfQ.m_u8_AJROY1xsMYanYhQK0Pc3Rj27Dxvv3f2VMfO5Tw`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );

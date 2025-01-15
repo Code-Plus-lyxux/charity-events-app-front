@@ -24,6 +24,7 @@ const EditEvent = ({ navigation, route }) => {
         endDateTime: '',
         location: '',
         aboutEvent: '',
+        images: [],
         status: '0'
     });
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -38,21 +39,18 @@ const EditEvent = ({ navigation, route }) => {
 
     const { eventID, eventName, location, startDate, endDate, aboutEvent, backgroundImage } = route.params;
     
-    const [name, setName] = useState('');
-    const [eventLocation, setEventLocation] = useState('');
-    const [start, setStart] = useState('');
-    const [end, setEnd] = useState('');
-    const [about, setAbout] = useState('');
-    const [image, setImage] = useState('');
 
     // Pre-fill the fields with the data passed in route.params
     useEffect(() => {
-        setName(eventName || '');
-        setEventLocation(location || '');
-        setStart(startDate || '');
-        setEnd(endDate || '');
-        setAbout(aboutEvent || '');
-        setImage(backgroundImage || '');
+        setEventDetails(prevDetails => ({
+            ...prevDetails,
+            eventName: eventName || '',
+            location: location || '',
+            startDateTime: startDate || '',
+            endDateTime: endDate || '',
+            aboutEvent: aboutEvent || '',
+            backgroundImage: backgroundImage || ''
+        }));
     }, [eventName, location, startDate, endDate, aboutEvent, backgroundImage]);
 
     useEffect(() => {
@@ -133,7 +131,8 @@ const EditEvent = ({ navigation, route }) => {
                 endDateTime: data.endDate || '',
                 location: data.location || '',
                 aboutEvent: data.aboutEvent || '',
-                status: data.status?.toString() || '0', // Convert status to string for the form
+                status: data.status?.toString() || '0', 
+                images: data.images || []// Convert status to string for the form
             });
 
             console.log('Fetched event:', data);
@@ -165,18 +164,22 @@ const EditEvent = ({ navigation, route }) => {
     
         // Format event details for the API
         const formattedEventDetails = {
-            ...eventDetails,
+
+            eventName:eventDetails.eventName,
             eventId: eventID, // Include the eventId explicitly
             startDate: eventDetails.startDateTime, // Map startDateTime to startDate
             endDate: eventDetails.endDateTime, // Map endDateTime to endDate
             backgroundImage: eventDetails.backgroundImage || null, // Handle null backgroundImage
-            status: parseInt(eventDetails.status, 10), // Ensure status is a number
+            aboutEvent: eventDetails.aboutEvent,
+            location:eventDetails.location,
+            status: parseInt(eventDetails.status, 10),// Ensure status is a number
+            images: eventDetails.images 
         };
-    
+        console.log('formattedEventDetails: ',formattedEventDetails);
         try {
             const token = await AsyncStorage.getItem('token');
             const response = await axios.put(
-                'http://10.0.3.2:5001/api/events/update',
+                `${API_URL}/api/events/update`,
                 formattedEventDetails,
                 {
                     headers: {
@@ -191,10 +194,10 @@ const EditEvent = ({ navigation, route }) => {
             Alert.alert('Success', 'Event updated successfully!', [
                 {
                     text: 'OK',
-                    onPress:() => navigation.navigate('EventPage', { 
-                        id: route.params?.id , 
-                        hostedByUser: route.params?.hostedByUser 
-                      }),
+                    // onPress:() => navigation.navigate('EventPage', { 
+                    //     id: route.params?.id , 
+                    //     hostedByUser: route.params?.hostedByUser 
+                    //   }),
                 },
             ]);
         } catch (error) {
@@ -225,7 +228,10 @@ const EditEvent = ({ navigation, route }) => {
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%', paddingHorizontal: 26, }}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={() => navigation.navigate('EventPage', { 
+                                            id: eventID , 
+                                            hostedByUser: true
+                                            })}>
                     <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
                 </TouchableOpacity>
                 <Text style={[styles.AddEventText]}>Edit Event</Text>
@@ -242,37 +248,52 @@ const EditEvent = ({ navigation, route }) => {
 
                 <View style={styles.container}>
                     <BackgroundImageUploadPortal
-                        onBackgroundImageChange={setImage}
-                        previousBackgroundImage={image}
+                        onBackgroundImageChange={updateBackgroundImage}
+                        previousBackgroundImage={eventDetails.backgroundImage}
                     />
 
                     <EventDetail
                         property="Event Name"
-                        value={name}
-                        onChangeText={setName}
+                        value={eventDetails.eventName}
+                        onChangeText={(text) => setEventDetails(prevDetails => ({
+                            ...prevDetails,
+                            eventName: text
+                        }))}
                     />
                     <DateTimePickerComponent
                         property="Start date and time"
-                        value={start}
+                        value={eventDetails.startDateTime}
                         start_or_end="Start"
-                        onChangeDateTime={setStart}
+                        onChangeDateTime={(text) => setEventDetails(prevDetails => ({
+                            ...prevDetails,
+                            startDateTime: text
+                        }))}
                     />
                     <DateTimePickerComponent
                         property="End date and time"
-                        value={end}
+                        value={eventDetails.endDateTime}
                         start_or_end="End"
-                        onChangeDateTime={setEnd}
+                        onChangeDateTime={(text) => setEventDetails(prevDetails => ({
+                            ...prevDetails,
+                            endDateTime: text
+                        }))}
                     />
                     <LocationDetail
                         property="Location"
-                        value={eventLocation}
+                        value={eventDetails.location}
                         onPress={() => setIsModalVisible(true)}
-                        onChangeLocation={setEventLocation}
+                        onChangeLocation={(text) => setEventDetails(prevDetails => ({
+                            ...prevDetails,
+                            location: text
+                        }))}
                     />
                     <AboutEvent
                         property="About Event"
-                        value={about}
-                        onChangeText={setAbout}
+                        value={eventDetails.aboutEvent}
+                        onChangeText={(text) => setEventDetails(prevDetails => ({
+                            ...prevDetails,
+                            aboutEvent: text
+                        }))}
                     />
                 </View>
 

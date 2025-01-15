@@ -154,70 +154,79 @@ const Profile_page = ({ navigation }) => {
 
     // Open Image Gallery and Crop Image
     const handleEditImage = async () => {
-        ImagePicker.launchImageLibrary({
-            mediaType: 'photo',
-            quality: 0.5,
-        }, async (response) => {
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            } else if (response.errorCode) {
-                console.log('ImagePicker Error: ', response.errorMessage);
-            } else {
-                const imageUri = response.assets[0].uri;
+        ImagePicker.launchImageLibrary(
+            {
+                mediaType: 'photo',
+                quality: 0.5,
+            },
+            async (response) => {
+                if (response.didCancel) {
+                    console.log('User cancelled image picker');
+                } else if (response.errorCode) {
+                    console.log('ImagePicker Error: ', response.errorMessage);
+                } else {
+                    try {
+                        const imageUri = response.assets[0].uri;
     
-                // Display alert to confirm upload
-                Alert.alert(
-                    "Update Profile Picture",
-                    "Are you sure you want to update your profile picture?",
-                    [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                            text: "Yes", onPress: () => uploadProfileImage(imageUri)
-                        }
-                    ]
-                );
+                        // Extract file type from URI
+                        const fileType = imageUri.substring(imageUri.lastIndexOf('.') + 1);
+    
+                        // Confirm before uploading
+                        Alert.alert(
+                            "Update Profile Picture",
+                            "Are you sure you want to update your profile picture?",
+                            [
+                                { text: "Cancel", style: "cancel" },
+                                {
+                                    text: "Yes",
+                                    onPress: async () => {
+                                        const formData = new FormData();
+                                        formData.append('profileImage', {
+                                            uri: imageUri,
+                                            type: `image/${fileType}`,  // Correct file type (e.g., image/jpeg, image/png)
+                                            name: `profileImage.${fileType}`,  // Maintain proper file extension
+                                        });
+    
+                                        const token = await AsyncStorage.getItem('token');
+                                        if (!token) {
+                                            console.error('No token found');
+                                            return;
+                                        }
+    
+                                        // Upload profile image
+                                        const response = await axios.put(
+                                            `${API_URL}/api/user/profile`,
+                                            formData,
+                                            {
+                                                headers: {
+                                                    'Content-Type': 'multipart/form-data',
+                                                    'Authorization': `Bearer ${token}`,
+                                                },
+                                            }
+                                        );
+    
+                                        // Update imageUri in state
+                                        const updatedImageUrl = response.data.user.profileImage;
+                                        setUser(prevState => ({
+                                            ...prevState,
+                                            imageUri: updatedImageUrl,
+                                        }));
+    
+                                        console.log('Profile updated successfully:', response.data);
+                                        Alert.alert("Success", "Profile picture updated successfully!");
+                                    },
+                                },
+                            ]
+                        );
+                    } catch (error) {
+                        console.error('Error uploading profile image:', error.response || error);
+                        Alert.alert("Error", "Failed to update profile picture.");
+                    }
+                }
             }
-        });
+        );
     };
     
-    const uploadProfileImage = async (imageUri) => {
-        const formData = new FormData();
-    
-        formData.append('profileImage', {
-            uri: imageUri,
-            type: 'image/jpeg', // Adjust based on file type if necessary
-            name: imageUri.split('/').pop(), // Use file name from the path
-        });
-    
-        try {
-            const token = await AsyncStorage.getItem('token');
-            if (!token) {
-                console.error('No token found');
-                return;
-            }
-    
-            const response = await axios.put('http://10.0.3.2:5001/api/user/profile', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            
-            // Update the imageUri in state on success
-            const updatedImageUrl = response.data.user.profileImage;
-
-            setUser(prevState => ({
-                ...prevState,
-                imageUri: updatedImageUrl,
-            }));
-            console.log('user.imageuri: ',user.imageUri)
-            console.log('Profile updated successfully:', response.data);
-            Alert.alert("Success", "Profile picture updated successfully!");
-        } catch (error) {
-            console.error('Error uploading profile image:', error.response || error);
-            Alert.alert("Error", "Failed to update profile picture.");
-        }
-    };
     
     const handleLogout = () => {
         Alert.alert(
@@ -249,7 +258,7 @@ const Profile_page = ({ navigation }) => {
                 <View style={styles.container}>
                     <Text style={styles.TitleText}>Profile</Text>
                     <Image 
-                        source={user.imageUri ? { uri: `http://10.0.3.2:5001${user.imageUri}` } : user_image} 
+                        source={user.imageUri ? { uri: `${user.imageUri}` } : user_image} 
                         style={styles.circularImg} 
                         />
                     <TouchableOpacity onPress={handleEditImage}>

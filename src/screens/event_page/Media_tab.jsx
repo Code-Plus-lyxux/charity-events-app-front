@@ -11,8 +11,10 @@ import {
 
 import TickCircleIcon from '../../assets/images/tick-circle.png';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../constants/api';
 
-const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
+const Media_tab = ({ eventHostedByUser,eventID, onSelectImage ,refreshMediaTab}) => {
     
     
     // const uploadedImages = [
@@ -29,11 +31,8 @@ const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
     const [selectedImages, setSelectedImages] = useState([]);
     const [selectButtonStatus, setSelectButtonStatus] = useState('select');
     const [selectButtonPressed, setSelectButtonPressed] = useState(false);
-    const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(0);
+    const [no_of_UploadedImages, setNoOfUploadedImages] = useState(0);
     const [loading, setLoading] = useState(true);
-
-    const eventID = '677f536a0f5d27206ba283d1';
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2Q1ZDZhNTg5MjY5YWI4OTA1OGRiMiIsImlhdCI6MTczNjQ3OTI3NiwiZXhwIjoxNzM2NTY1Njc2fQ.kUa6pxJH81aJ_u4J5t2NYyi79iEmz0-7MLl0pNRXneQ'
 
 
     useEffect(() => {
@@ -43,10 +42,20 @@ const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
         }
     }, [eventID]);
 
+    useEffect(() => {
+        // Fetch new media or handle refresh logic here
+        console.log('Media tab refreshed');
+        getEventImagesById(eventID);
+        // Your logic to refresh media content
+    }, [refreshMediaTab]);
+
+
     const getEventImagesById = async (eventID) => {
+        setLoading(true);
+        const token = await AsyncStorage.getItem('token');
         try {
           const response = await axios.get(
-            `http://10.0.3.2:5001/api/events/${eventID}`,
+            `${API_URL}/api/events/${eventID}`,
             {
               headers: {
                 'Content-Type': 'application/json',
@@ -60,14 +69,16 @@ const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
           setLoading(false);
           console.log('response:',data.images) // Update state with fetched images
           console.log('uploaded images:',uploadedImages)
-          set_No_of_UploadedImages(data.images.length); // Update count of uploaded images
-      
+          setNoOfUploadedImages(data.images.length); // Update count of uploaded images
+          console.log('no of uploaded images:',no_of_UploadedImages)
           console.log('Fetched event:', data);
         } catch (error) {
           console.error(
             'Error fetching event:',
             error.response ? error.response.data : error.message
           );
+        }finally {
+            setLoading(false);
         }
       };
       
@@ -114,7 +125,7 @@ const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
         <ScrollView>
             <View>
                 {eventHostedByUser ? (
-                    no_of_UploadedImages === 0 ? (
+                    uploadedImages.length === 0 ? (
                         <View style={styles.mediaContainer}>
                             <Text style={styles.detailTitle}>Upload Media</Text>
                             <Text style={styles.mediaText}>
@@ -123,84 +134,45 @@ const Media_tab = ({ eventHostedByUser, onSelectImage }) => {
                         </View>
                     ) : (
                         <>
-                            
-                                <TouchableOpacity   
-                                    style={styles.selectButtonContainer}
+                            <TouchableOpacity style={styles.selectButtonContainer}>
+                                <Text
+                                    onPress={handleSelectButtonPress}
+                                    style={selectButtonPressed ? styles.cancelText : styles.selectText}
                                 >
-                                    <Text onPress={handleSelectButtonPress} style={selectButtonPressed ? styles.cancelText : styles.selectText}>
-                                        {selectButtonPressed ? 'Cancel' : 'Select'}
-                                    </Text>
-                                </TouchableOpacity>
-                            
-                            {!loading &&
-                            <View style={styles.collageContainer}>
-                                {uploadedImages.slice(0, no_of_UploadedImages).map((image, index) => (
-                                    <TouchableOpacity
-                                    key={index}
-                                    onPress={() => {
-                                        if (selectButtonPressed) {
-                                            toggleImageSelection(image);
-                                            onSelectImage(selectedImages.length > 0);
-                                            console.log('array length :'+selectedImages.length +'  array:' +selectedImages);
-                                        }
-                                    }}
-                                    activeOpacity={selectButtonPressed ? 0.7 : 1}
-                                    style={styles.imageWrapper}
-                                >
-                                    <Image
-                                        source={{ uri: image }} 
-                                        style={styles.uploadedImage}
-                                        resizeMode="cover"
-                                    />
-                                    {selectButtonPressed && selectedImages.includes(image) && (
-                                        <Image
-                                            source={TickCircleIcon}
-                                            style={styles.tickIcon}
-                                        />
-                                    )}
-                                </TouchableOpacity>
-                                ))}
-                            </View>}
+                                    {selectButtonPressed ? 'Cancel' : 'Select'}
+                                </Text>
+                            </TouchableOpacity>
+                            {loading ? (
+                                <Text>Loading images...</Text>
+                            ) : (
+                                <View style={styles.collageContainer}>
+                                    {uploadedImages.map((image, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() => {
+                                                if (selectButtonPressed) {
+                                                    toggleImageSelection(image);
+                                                }
+                                            }}
+                                            activeOpacity={selectButtonPressed ? 0.7 : 1}
+                                            style={styles.imageWrapper}
+                                        >
+                                            <Image
+                                                source={{ uri: image }}
+                                                style={styles.uploadedImage}
+                                                resizeMode="cover"
+                                            />
+                                            {selectButtonPressed && selectedImages.includes(image) && (
+                                                <Image source={TickCircleIcon} style={styles.tickIcon} />
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
                         </>
                     )
                 ) : (
-                    no_of_UploadedImages === 0 ? (
                     <Text style={styles.mediaText}>No media to show</Text>
-                    ):(
-                        <View style={styles.collageContainer}>
-                        console.log(uploadedImages);
-                        {uploadedImages.slice(0, no_of_UploadedImages).map((image, index) => (
-                          <TouchableOpacity
-                            key={index}
-                            onPress={() => {
-                              if (selectButtonPressed) {
-                                toggleImageSelection(index);
-                                onSelectImage(selectedImages.length > 0);
-                                console.log(
-                                  'array length :' + selectedImages.length + '  array:' + selectedImages
-                                );
-                              }
-                            }}
-                            activeOpacity={selectButtonPressed ? 0.7 : 1}
-                            style={styles.imageWrapper}
-                          >
-                            <Image
-                              source={{ uri: image }} // Pass the URI properly here
-                              style={styles.uploadedImage}
-                              resizeMode="cover"
-                              onError={(error) => console.log('Image load error:', error.nativeEvent.error)}
-                            />
-                            {selectButtonPressed && selectedImages.includes(index) && (
-                              <Image
-                                source={TickCircleIcon}
-                                style={styles.tickIcon}
-                              />
-                            )}
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    
-                    )
                 )}
             </View>
         </ScrollView>
