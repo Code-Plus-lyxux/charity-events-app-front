@@ -38,6 +38,7 @@ const Login = ({ navigation }) => {
             const credentials = { email, password };
             console.log(credentials);
             const response = await loginUser(credentials);
+            console.log(response.data);
     
             if (!response) {
                 Alert.alert('Login failed. Please try again.');

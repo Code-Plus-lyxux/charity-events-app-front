@@ -104,13 +104,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     paddingTop: 20,
     backgroundColor: 'white',
   },
   scrollContainer: {
     paddingVertical: 10,
-    paddingHorizontal: '5%',
+    paddingHorizontal: '0%',
     justifyContent: 'flex-start',
     alignItems: 'center',
   },

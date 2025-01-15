@@ -18,9 +18,11 @@ const UserProfile = ({ navigation }) => {
 
 
     const [events, setEvents] = useState([]);
+    const [unique_Events, set_Unique_Events] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
+   
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -47,7 +49,7 @@ const UserProfile = ({ navigation }) => {
                 });
 
                 setEvents(uniqueEvents);
-
+                set_Unique_Events(uniqueEvents);
                 setUser(userData);
                 //setEvents(allEvents); // Set the combined events to state
             } catch (err) {
@@ -64,7 +66,8 @@ const UserProfile = ({ navigation }) => {
         if (icon === "hand") {
             setEvents(user.eventsAttending); // Only show attending events
         } else {
-            setEvents(uniqueEvents);
+            unique_Events &&
+            setEvents(unique_Events);
         }
     };
 
@@ -93,14 +96,10 @@ const UserProfile = ({ navigation }) => {
                 </View>
             </Pressable>
             <View style={styles.container}>
-                <Image
-
-                    source={user.profileImage ? { uri: user.profileImage } : user_image}
-
-                    resizeMode="contain"
-                    style={styles.imageStyle}
-                />
-
+                <Image 
+                    source={user.profileImage  ? { uri: user.profileImage  } : user_image} 
+                    style={styles.circularImg} 
+                    />
                 <Text style={styles.NameText}>{user.fullName}</Text>
                 <Text style={styles.EmailText}>{user.email}</Text>
             </View>
@@ -128,7 +127,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        padding: 20,
+        padding: 10,
     },
     container: {
         paddingHorizontal: 30,
@@ -154,7 +153,8 @@ const styles = StyleSheet.create({
     },
     eventsSection: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 0,
+        marginHorizontal:0
     },
     eventsHeader: {
         fontSize: 16,
@@ -165,4 +165,11 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         alignItems: 'center',
     },
+    circularImg:{
+        width:100,
+        height:100,
+        borderRadius:90,
+        marginBottom:10,
+        marginTop:0
+    }
 });

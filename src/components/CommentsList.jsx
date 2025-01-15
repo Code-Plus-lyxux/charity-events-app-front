@@ -10,8 +10,8 @@ const CommentsList = ({ comments }) => {
                     <View key={index} style={styles.commentContainer}>
                         <Image
                             source={
-                                comment.userId?.profilePhoto
-                                    ? { uri: comment.userId.profilePhoto }
+                                comment.userId?.profileImage
+                                    ? { uri: comment.userId.profileImage }
                                     : profileImage
                             }
                             style={styles.profileImage}

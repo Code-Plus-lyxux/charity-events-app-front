@@ -27,7 +27,6 @@ const Add_event = ({navigation}) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLocationSearching,setActiveLocationSearching] = useState(false);
     const [suggestions, setSuggestions] = useState(['Colombo, Sri Lanka','Kandy, Sri Lanka', 'Homagama, Sri Lanka', 'Galle, Sri Lanka', 'Jaffna, Sri Lanka']);
-    const [token, setToken] = useState(null);
      const [userId, setUserId] = useState(null);
 
     // Animated value for modal slide
@@ -40,22 +39,6 @@ const Add_event = ({navigation}) => {
         }));
     };
 
-    useEffect(() => {
-        const getToken = async () => {
-          try {
-            const storedToken = await AsyncStorage.getItem('token');
-            const storedUserId = await AsyncStorage.getItem('userId');
-            
-            if (storedToken) setToken(storedToken);
-            if (storedUserId) setUserId(storedUserId);
-          } catch (error) {
-            console.log('Error fetching token:', error);
-          }
-        };
-    
-        getToken();
-      }, []);
-    console.log('Add event:',token);
     
 
     const submitEventDetails = async () => {
