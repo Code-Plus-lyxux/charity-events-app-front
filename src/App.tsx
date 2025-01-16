@@ -70,7 +70,7 @@ const TabNavigator = () => {
 
 const App = () => {
 
-        const isTesting = true; // Set this to true for testing purposes
+        const isTesting = false; // Set this to true for testing purposes
 
        const testScreen = 'Tabs'; // Set this to the screen you want to test
 

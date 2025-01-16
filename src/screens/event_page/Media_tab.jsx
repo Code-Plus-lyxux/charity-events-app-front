@@ -15,18 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../../constants/api';
 
 const Media_tab = ({ eventHostedByUser,eventID, onSelectImage ,refreshMediaTab}) => {
-    
-    
-    // const uploadedImages = [
-    //     require('../../assets/images/uploadImages/image1.png'),
-    //     require('../../assets/images/uploadImages/image2.png'),
-    //     require('../../assets/images/uploadImages/image3.png'),
-    //     require('../../assets/images/uploadImages/image4.png'),
-    //     require('../../assets/images/uploadImages/image5.png'),
-    //     require('../../assets/images/uploadImages/image6.png'),
-    // ];
-    
-    
+ 
     const [uploadedImages, setUploadedImages] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
     const [selectButtonStatus, setSelectButtonStatus] = useState('select');
@@ -37,17 +26,27 @@ const Media_tab = ({ eventHostedByUser,eventID, onSelectImage ,refreshMediaTab})
 
     useEffect(() => {
         if (eventID) {
-            console.log("inside use effect---------------------")
             getEventImagesById(eventID);
         }
+        setSelectedImages([]);
+        onSelectImage(false);
     }, [eventID]);
 
     useEffect(() => {
-        // Fetch new media or handle refresh logic here
         console.log('Media tab refreshed');
+        
+        // Reset the select button state
+        setSelectButtonStatus('select');
+        setSelectButtonPressed(false);
+        
+        // Fetch new media content
         getEventImagesById(eventID);
-        // Your logic to refresh media content
+    
+        // Clear selected images
+        setSelectedImages([]);
+        onSelectImage(false);
     }, [refreshMediaTab]);
+    
 
 
     const getEventImagesById = async (eventID) => {
@@ -68,8 +67,8 @@ const Media_tab = ({ eventHostedByUser,eventID, onSelectImage ,refreshMediaTab})
           setUploadedImages(data.images);
           setLoading(false);
           console.log('response:',data.images) // Update state with fetched images
-          console.log('uploaded images:',uploadedImages)
-          setNoOfUploadedImages(data.images.length); // Update count of uploaded images
+         
+          setNoOfUploadedImages(response.data.images.length); // Update count of uploaded images
           console.log('no of uploaded images:',no_of_UploadedImages)
           console.log('Fetched event:', data);
         } catch (error) {
@@ -109,17 +108,6 @@ const Media_tab = ({ eventHostedByUser,eventID, onSelectImage ,refreshMediaTab})
             return !prev;
         });
     };
-
-    // const deleteSelectedImages = () => {
-    //     // Perform deletion logic here
-    //     console.log('Deleting selected images:', selectedImages);
-    //     // Example: Remove selected images from uploadedImages
-    //     setUploadedImages((prevImages) =>
-    //         prevImages.filter((image) => !selectedImages.includes(image))
-    //     );
-    //     setSelectedImages([]);
-    //     onDeleteSelectedImages();
-    // };
 
     return (
         <ScrollView>
