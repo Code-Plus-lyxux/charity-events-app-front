@@ -97,7 +97,7 @@ const UserProfile = ({ navigation }) => {
             </Pressable>
             <View style={styles.container}>
                 <Image 
-                    source={user.profileImage  ? { uri: user.profileImage  } : user_image} 
+                    source={user.profileImage  ? { uri: `${user.profileImage}?t=${new Date().getTime()}`  } : user_image} 
                     style={styles.circularImg} 
                     />
                 <Text style={styles.NameText}>{user.fullName}</Text>

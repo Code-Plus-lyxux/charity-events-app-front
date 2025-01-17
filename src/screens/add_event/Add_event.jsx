@@ -2,8 +2,6 @@ import React,{ useState,useEffect } from 'react';
 import axios from 'axios';
 import { View, Text,StyleSheet,Image,SafeAreaView,ScrollView,TextInput,Pressable,TouchableOpacity,Modal,Animated,FlatList,Alert} from 'react-native';
 import BackArrowIcon from '../../assets/images/back_arrow_icon_2.png';
-import SearchNormalIcon from '../../assets/images/search-normal.png';
-import SearchPressedIcon from '../../assets/images/search-pressed.png';
 import { EventDetail } from '../../components/EventDetail';
 import { LocationDetail } from '../../components/LocationDetail';
 import { AboutEvent } from '../../components/AboutEvent';
@@ -11,7 +9,7 @@ import DateTimePickerComponent from '../../components/DateTimePicker';
 import { BackgroundImageUploadPortal } from '../../components/BackgroundImageUploadPortal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../../constants/api';
-
+import LocationModal from '../../components/LocationModal';
 
 const Add_event = ({navigation}) => {
 
@@ -25,12 +23,6 @@ const Add_event = ({navigation}) => {
         status: '0'
     });    
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [activeLocationSearching,setActiveLocationSearching] = useState(false);
-    const [suggestions, setSuggestions] = useState(['Colombo, Sri Lanka','Kandy, Sri Lanka', 'Homagama, Sri Lanka', 'Galle, Sri Lanka', 'Jaffna, Sri Lanka']);
-     const [userId, setUserId] = useState(null);
-
-    // Animated value for modal slide
-    const slideAnim = useState(new Animated.Value(0))[0];
 
     const handleFieldChange = (field, value) => {
         setEventDetails((prevDetails) => ({
@@ -38,8 +30,6 @@ const Add_event = ({navigation}) => {
             [field]: value,
         }));
     };
-
-    
 
     const submitEventDetails = async () => {
         // Check for missing details
@@ -111,46 +101,10 @@ const Add_event = ({navigation}) => {
         }
     };
     
-    
-    
 
-    // Trigger slide-up animation when modal is shown
-    useEffect(() => {
-        if (isModalVisible) {
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        } else {
-            Animated.timing(slideAnim, {
-                toValue: 300,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [isModalVisible]);
-
-    const fetchSuggestions = async (query) => {
-        if (query.length < 3) {
-            setSuggestions([]);
-            return;
-        }
-
-        try {
-            // Replace with API call (e.g., Google Places API)
-            const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=YOUR_API_KEY`);
-            const data = await response.json();
-            const places = data.predictions.map((item) => item.description);
-            setSuggestions(places);
-        } catch (error) {
-            console.error('Error fetching location suggestions:', error);
-        }
-    };
-
-    const handleSuggestionSelect = (suggestion) => {
-        handleFieldChange('location', suggestion);
-        setIsModalVisible(false);
+    // Function to handle location selection
+    const handleSuggestionSelect = (location) => {
+        handleFieldChange('location', location);
     };
 
     const updateBackgroundImage = (uri) => {
@@ -193,77 +147,17 @@ const Add_event = ({navigation}) => {
             </ScrollView>
 
 
-                {/* Modal for Editing Details */}
-                <Modal
-                    animationType="none"
-                    transparent={true}
-                    visible={isModalVisible}
-                    onRequestClose={() => setIsModalVisible(false)}
-                    >
-                    <View style={styles.modalOverlay} onPress={() => setIsModalVisible(false)}>
-                        <Animated.View
-                        style={[
-                            styles.modalContainer,
-                            { transform: [{ translateY: slideAnim }] },
-                        ]}
-                        >
-                        <Pressable
-                            style={[
-                                activeLocationSearching
-                                    ? styles.activeModalInput
-                                    : styles.modalInput,
-                                {
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                },
-                            ]}
-                            onPress={() => setActiveLocationSearching(true)}
-                        >
-                            <TextInput
-                                style={[styles.locationInput, { flex: 1 }]} 
-                                value={eventDetails.location}
-                                onChangeText={(text) => {
-                                    setLocation(text);
-                                    setActiveLocationSearching(true);
-                                    fetchSuggestions(text) 
-                                }}
-                                onFocus={() => setActiveLocationSearching(true)} 
-                                placeholder="Search for location"
-                                placeholderTextColor="#888"
-                            />
-                            <Image
-                                source={activeLocationSearching ? SearchPressedIcon : SearchNormalIcon}
-                                resizeMode="contain"
-                                style={[styles.iconStyle, { marginLeft: 10 }]} 
-                            />
-                        </Pressable>
-
-                        {suggestions.length > 0 && (
-                            <>
-                                <Text style={styles.suggestionsTitle}>Location Suggestions</Text>
-                                <FlatList
-                                    data={suggestions}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity onPress={() => handleSuggestionSelect(item)} >
-                                            <View style={styles.separator} />
-                                            <Text style={styles.suggestionText}>{item}</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                />
-                            </>
-                        )}
-
-
-                        </Animated.View>
-                    </View>
-                    </Modal>
-                    <View style={styles.bottomContainer}>
-                        <TouchableOpacity style={styles.Create_Event_Button} onPress={()=>submitEventDetails()}>
-                            <Text style={styles.buttonTextCreateEvent}>Create Event</Text>
-                        </TouchableOpacity>
-                    </View>
+            {/* Modal for Editing Details */}
+            <LocationModal
+                visible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                onSelectLocation={handleSuggestionSelect}
+            />
+            <View style={styles.bottomContainer}>
+                <TouchableOpacity style={styles.Create_Event_Button} onPress={()=>submitEventDetails()}>
+                    <Text style={styles.buttonTextCreateEvent}>Create Event</Text>
+                </TouchableOpacity>
+            </View>
                     
                     
             

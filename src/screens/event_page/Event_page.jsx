@@ -150,7 +150,7 @@ const Event_page = ({ navigation, route }) => {
 
 
     const getHostedByUser = (event) => {
-        return user?._id === event?.userId._id;
+        return user?._id === event?.userId;
     };
 
     console.log(user?._id, event?.userId._id);

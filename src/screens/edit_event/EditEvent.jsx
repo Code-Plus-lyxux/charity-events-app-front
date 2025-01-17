@@ -13,8 +13,11 @@ import Hero from '../../assets/images/event-cover.png';
 import axios from 'axios';
 import { API_URL } from '../../constants/api';
 import { se } from 'date-fns/locale';
+import DeleteIcon from '../../assets/images/trash_icon.png';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {DeleteEventByID} from '../../api/events'
+import { getEventById } from '../../api/events';
+import LocationModal from '../../components/LocationModal';
 
 const EditEvent = ({ navigation, route }) => {
     const [eventDetails, setEventDetails] = useState({
@@ -28,15 +31,6 @@ const EditEvent = ({ navigation, route }) => {
         status: '0'
     });
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [activeLocationSearching, setActiveLocationSearching] = useState(false);
-    const [suggestions, setSuggestions] = useState(['Kandy', 'Kandy,Sri Lanka']);
-
-    const [isLoading, setIsLoading] = useState(false);
-    //const eventID = '677f59ac0f5d27206ba283d9'
-
-    // Animated value for modal slide
-    const slideAnim = useState(new Animated.Value(0))[0];
-
     const { eventID, eventName, location, startDate, endDate, aboutEvent, backgroundImage } = route.params;
     
 
@@ -59,46 +53,17 @@ const EditEvent = ({ navigation, route }) => {
         }
     }, [eventID]);
 
-    // Trigger slide-up animation when modal is shown
-    useEffect(() => {
-        if (isModalVisible) {
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        } else {
-            Animated.timing(slideAnim, {
-                toValue: 300,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [isModalVisible]);
 
-    const fetchSuggestions = async (query) => {
-        if (query.length < 3) {
-            setSuggestions([]);
-            return;
-        }
-
-        try {
-            // Replace with API call (e.g., Google Places API)
-            const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=YOUR_API_KEY`);
-            const data = await response.json();
-            const places = data.predictions.map((item) => item.description);
-            setSuggestions(places);
-        } catch (error) {
-            console.error('Error fetching location suggestions:', error);
-        }
+     // Function to handle location selection
+     const handleSuggestionSelect = (location) => {
+        handleFieldChange('location', location);
     };
 
-    const handleSuggestionSelect = (suggestion) => {
+    const handleFieldChange = (field, value) => {
         setEventDetails((prevDetails) => ({
             ...prevDetails,
-            location: suggestion, // Set the new location value
+            [field]: value,
         }));
-        setIsModalVisible(false);
     };
 
     const getEventById = async () => {
@@ -223,18 +188,82 @@ const EditEvent = ({ navigation, route }) => {
         
       };
 
+    const handleDeleteEvent = async (event_ID) => {
+        try {
+            // Fetch event details
+            const event = await getEventById(event_ID);
+    
+            // Confirm deletion
+            Alert.alert(
+                "Delete Event",
+                `Do you want to delete this event "${eventDetails.eventName}"?`,
+                [
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                    },
+                    {
+                        text: "Yes",
+                        onPress: async () => {
+                            try {
+                                // Call delete API
+                                const response = await DeleteEventByID(event_ID);
+    
+                                // Handle successful deletion
+                                Alert.alert(
+                                    "Event Deleted",
+                                    `The event "${eventDetails.eventName}" has been successfully deleted.`,
+                                    [
+                                        {
+                                            text: "OK",
+                                            onPress: () => navigation.navigate('Tabs'), // Redirect on success
+                                        },
+                                    ]
+                                );
+                            } catch (error) {
+                                console.error("Delete Event Error:", error.message);
+                                Alert.alert(
+                                    "Error",
+                                    error.message || "An unexpected error occurred. Please try again later."
+                                );
+                            }
+                        },
+                    },
+                ]
+            );
+        } catch (error) {
+            console.error("Fetch Event Error:", error.message);
+            Alert.alert(
+                "Error",
+                error.message || "Failed to fetch event details. Please try again later."
+            );
+        }
+    };
+    
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white', minHeight: '100%' }}>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: '8%', paddingHorizontal: 26, }}>
-                <TouchableOpacity onPress={() => navigation.navigate('EventPage', { 
-                                            id: eventID , 
-                                            hostedByUser: true
-                                            })}>
+            <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                marginTop: '8%', 
+                paddingHorizontal: 26,
+            }}>
+                <TouchableOpacity 
+                    onPress={() => navigation.navigate('EventPage', { id: eventID, hostedByUser: true })}
+                    style={{ marginRight: 10 }}
+                >
                     <Image source={BackArrowIcon} resizeMode="contain" style={styles.iconStyle} />
                 </TouchableOpacity>
-                <Text style={[styles.AddEventText]}>Edit Event</Text>
+                <Text style={[styles.AddEventText, { flex: 1 }]}>Edit Event</Text>
+                <TouchableOpacity
+                    style={[styles.deleteButton, { flexDirection: 'row', alignItems: 'center' }]}
+                    onPress={()=>handleDeleteEvent(eventID)}
+                >
+                    <Text style={styles.deleteText}>Delete Event</Text>
+                    <Image source={DeleteIcon} style={styles.deleteIcon} />
+                </TouchableOpacity>
             </View>
 
             <ScrollView
@@ -255,28 +284,19 @@ const EditEvent = ({ navigation, route }) => {
                     <EventDetail
                         property="Event Name"
                         value={eventDetails.eventName}
-                        onChangeText={(text) => setEventDetails(prevDetails => ({
-                            ...prevDetails,
-                            eventName: text
-                        }))}
+                        onChangeText={(text) => handleFieldChange('eventName', text)}
                     />
                     <DateTimePickerComponent
                         property="Start date and time"
                         value={eventDetails.startDateTime}
                         start_or_end="Start"
-                        onChangeDateTime={(text) => setEventDetails(prevDetails => ({
-                            ...prevDetails,
-                            startDateTime: text
-                        }))}
+                        onChangeDateTime={(datetime) => handleFieldChange('startDateTime', datetime.toISOString())}
                     />
                     <DateTimePickerComponent
                         property="End date and time"
                         value={eventDetails.endDateTime}
                         start_or_end="End"
-                        onChangeDateTime={(text) => setEventDetails(prevDetails => ({
-                            ...prevDetails,
-                            endDateTime: text
-                        }))}
+                        onChangeDateTime={(datetime) => handleFieldChange('endDateTime', datetime.toISOString())}
                     />
                     <LocationDetail
                         property="Location"
@@ -290,84 +310,18 @@ const EditEvent = ({ navigation, route }) => {
                     <AboutEvent
                         property="About Event"
                         value={eventDetails.aboutEvent}
-                        onChangeText={(text) => setEventDetails(prevDetails => ({
-                            ...prevDetails,
-                            aboutEvent: text
-                        }))}
+                        onChangeText={(text) => handleFieldChange('aboutEvent', text)}
                     />
                 </View>
 
 
             </ScrollView>
-
             {/* Modal for Editing Details */}
-            <Modal
-                animationType="none"
-                transparent={true}
+            <LocationModal
                 visible={isModalVisible}
-                onRequestClose={() => setIsModalVisible(false)}
-            >
-                <View style={styles.modalOverlay} onPress={() => setIsModalVisible(false)}>
-                    <Animated.View
-                        style={[
-                            styles.modalContainer,
-                            { transform: [{ translateY: slideAnim }] },
-                        ]}
-                    >
-                        <Pressable
-                            style={[
-                                activeLocationSearching
-                                    ? styles.activeModalInput
-                                    : styles.modalInput,
-                                {
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                },
-                            ]}
-                            onPress={() => setActiveLocationSearching(true)}
-                        >
-                            <TextInput
-                                style={[styles.locationInput, { flex: 1 }]}
-                                value={eventDetails.location}
-                                onChangeText={(text) => {
-                                    setLocation(text);
-                                    setActiveLocationSearching(true);
-                                    fetchSuggestions(text)
-                                }}
-                                onFocus={() => setActiveLocationSearching(true)}
-                                placeholder="Search for location"
-                                placeholderTextColor="#888"
-                            />
-                            <Image
-                                source={activeLocationSearching ? SearchPressedIcon : SearchNormalIcon}
-                                resizeMode="contain"
-                                style={[styles.iconStyle, { marginLeft: 10 }]}
-                            />
-                        </Pressable>
-
-                        {suggestions.length > 0 && (
-                            <>
-                                <Text style={styles.suggestionsTitle}>Location Suggestions</Text>
-                                <FlatList
-                                    data={suggestions}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity onPress={() => handleSuggestionSelect(item)} >
-                                            <View style={styles.separator} />
-                                            <Text style={styles.suggestionText}>{item}</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                />
-                            </>
-                        )}
-
-
-                    </Animated.View>
-                </View>
-            </Modal>
-
-
+                onClose={() => setIsModalVisible(false)}
+                onSelectLocation={handleSuggestionSelect}
+            />
             <View style={styles.bottomContainer}>
                 <TouchableOpacity style={styles.Edit_Event_Button} onPress={() => updateEventDetails()}>
                     <Text style={styles.buttonTextEditEvent}>Save Details</Text>
@@ -444,33 +398,12 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '400',
     },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
+
     headerContainer: {
         width: '110%',
         flexDirection: 'row',
         justifyContent: 'flex-end',
         alignItems: 'flex-start',
-    },
-    modalContainer: {
-        height: '80%',
-        backgroundColor: '#fff',
-        paddingHorizontal: '10%',
-        paddingVertical: '5%',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        elevation: 5,
-    },
-    modalInput: {
-        borderWidth: 1,
-        borderColor: 'rgba(87, 87, 87, 0.3)',
-        borderRadius: 50,
-        paddingHorizontal: 20,
-        fontSize: 16,
-        marginBottom: 15,
     },
     activeModalInput: {
         borderWidth: 1,
@@ -479,12 +412,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         fontSize: 16,
         marginBottom: 15,
-    },
-    suggestionsTitle: {
-        fontSize: 15,
-        fontWeight: '600',
-        marginBottom: 10,
-        color: '#000',
     },
     separator: {
         height: 1,
@@ -509,6 +436,24 @@ const styles = StyleSheet.create({
         elevation: 1,
         zIndex: 1,
     },
+    deleteButton: {
+        backgroundColor: '#DA4F4F',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 5,
+        borderRadius: 30,
+        width: '31%',
+    },
+    deleteIcon: {
+        width: 12,
+        height: 12,
+    },
+    deleteText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+
 
 });
 
