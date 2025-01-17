@@ -51,7 +51,7 @@ const Event_page = ({ navigation, route }) => {
     const eventHostedByUser = route.params?.hostedByUser;
     const [modalVisible, setModalVisible] = useState(false);
     const [comment, setComment] = useState('');
-    const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(4);
+    //const [no_of_UploadedImages, set_No_of_UploadedImages] = useState(0);
     const [selectImage, setSelectImage] = useState(false);
     const [coverImage, setCoverImage] = useState(false)
     const [selectedImages, setSelectedImages] = useState([]);
@@ -65,6 +65,7 @@ const Event_page = ({ navigation, route }) => {
     const [loadingUser, setLoadingUser] = useState(true);
     const [loadingAttend, setLoadingAttend] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
+    let no_of_UploadedImages = 0;
 
     // Animated value for modal slide
     const slideAnim = useState(new Animated.Value(0))[0];
@@ -72,14 +73,14 @@ const Event_page = ({ navigation, route }) => {
 
     const handleSelectImage = (images) => {
         setSelectImage(true);
-        console.log(images[0]);
+        console.log(images);
+    
         setSelectedImages((prevSelectedImages) => [
-            ...prevSelectedImages,
-            ...(Array.isArray(images) ? images : []),  // Fallback to an empty array if not an array
+            ...(Array.isArray(images) ? images : []), // Fallback to an empty array if not an array
         ]);
+    
         console.log('Selected images:', images);
     };
-
 
     const { id, hostedByUser } = route.params;
     const eventID = id
@@ -119,6 +120,7 @@ const Event_page = ({ navigation, route }) => {
                 const eventData = await getEventById(id);
                 if (isMounted) {
                     setEvent(eventData);
+                    no_of_UploadedImages= eventData.images.length;
                 }
     
                 if (isMounted && eventData?.attendUsers) {
@@ -148,7 +150,7 @@ const Event_page = ({ navigation, route }) => {
 
 
     const getHostedByUser = (event) => {
-        return user?._id === event?.userId._id;
+        return user?._id === event?.userId;
     };
 
     console.log(user?._id, event?.userId._id);
@@ -159,15 +161,37 @@ const Event_page = ({ navigation, route }) => {
         if (activeTab === 'media') {
             return (
                 <View style={styles.bottomBar}>
-                    {!selectImage && eventHostedByUser && (
-                        <TouchableOpacity style={styles.uploadButton1} onPress={() => pickImages(eventID)}>
+                    {(!selectedImages?.length && eventHostedByUser) && (
+                        <TouchableOpacity
+                            style={styles.uploadButton1}
+                            onPress={() => {
+                                if (no_of_UploadedImages < 5) {
+                                    console.log('no of uploaded images 2 : ',no_of_UploadedImages )
+                                    pickImages(eventID);
+                                    
+                                } else {
+                                    Alert.alert('Error', 'You can only upload 5 images per event.');
+                                }
+                            }}
+                        >
                             <Text style={styles.uploadText}>Upload</Text>
                         </TouchableOpacity>
                     )}
-
-                    {selectImage && eventHostedByUser && (
+    
+                    {(selectedImages?.length > 0 && eventHostedByUser) && (
                         <>
-                            <TouchableOpacity style={styles.uploadButton2} onPress={()=>pickImages(eventID)}>
+                            <TouchableOpacity
+                                style={styles.uploadButton2}
+                                onPress={() => {
+                                    if (no_of_UploadedImages < 5) {
+                                        console.log('no of uploaded images 2 : ',no_of_UploadedImages )
+                                        pickImages(eventID);
+                                        
+                                    } else {
+                                        Alert.alert('Error', 'You can only upload 5 images per event.');
+                                    }
+                                }}
+                            >
                                 <Text style={styles.uploadText}>Upload</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -224,7 +248,7 @@ const Event_page = ({ navigation, route }) => {
     const startDate = "2025-02-03T09:30:00.000Z";
     const endDate = "2025-02-03T12:00:00.000Z";
 
-    console.log(formatEventDates(startDate, endDate));
+    //console.log(formatEventDates(startDate, endDate));
 
 
 
@@ -307,8 +331,6 @@ const Event_page = ({ navigation, route }) => {
             </View>
         );
     }
-
-
     if (loading) {
         return (
 
@@ -316,7 +338,6 @@ const Event_page = ({ navigation, route }) => {
 
         );
     }
-
     if (loadingUser || !user) {
         return (
 
@@ -324,14 +345,12 @@ const Event_page = ({ navigation, route }) => {
 
         );
     }
-
     if (loadingAttend) {
         return (
             <Text>Loading user status...</Text>
 
         );
     }
-
     const userCount = event.attendUsers.length;
 
     const renderTabContent = () => {
@@ -356,18 +375,20 @@ const Event_page = ({ navigation, route }) => {
                     `${API_URL}/api/events/${eventID}`,
                     {
                         headers: {
-                            'Content-Type': 'application/json',
+                            'content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`,
                         },
+                        timeout: 10000
                     }
                 );
-
+    
                 const data = response.data;
-
+    
                 // Filter out selected images
                 allImages = data.images.filter((image) => !selectedImages.includes(image));
-
-                console.log('Filtered Images:', allImages);
+                no_of_UploadedImages=allImages.length;
+    
+                //console.log('Filtered Images:', allImages);
             } catch (error) {
                 console.error(
                     'Error fetching event:',
@@ -375,7 +396,7 @@ const Event_page = ({ navigation, route }) => {
                 );
             }
         };
-
+    
         const deleteImages = async (eventID) => {
             const token = await AsyncStorage.getItem('token');
             try {
@@ -392,8 +413,8 @@ const Event_page = ({ navigation, route }) => {
                         },
                     }
                 );
-
-                console.log('Updated Images:', allImages);
+    
+                //console.log('Updated Images:', allImages);
             } catch (error) {
                 console.error(
                     'Error updating event:',
@@ -401,117 +422,141 @@ const Event_page = ({ navigation, route }) => {
                 );
             }
         };
-
+    
         await getEventImagesById(eventID);
         await deleteImages(eventID);
-
+    
+        // Reset selected images
+        setSelectedImages([]);
+        
         // Trigger media tab refresh
         setRefreshMediaTab(prev => !prev);
     };
-
+    
 
     const pickImages = async (eventID) => {
-        launchImageLibrary(
-            {
-                mediaType: 'photo',
-                quality: 0.5,
-                selectionLimit: 5, // Limit to 5 images
-            },
-            async (response) => {
-                if (response.didCancel) {
-                    console.log('User cancelled image picker');
-                } else if (response.errorMessage) {
-                    console.log('ImagePicker Error: ', response.errorMessage);
-                } else {
-                    // Prepare images for upload
-                    const images = response.assets.map((asset, index) => {
-                        // Extract the correct file extension
-                        const fileName = asset.fileName || `image_${Date.now()}`;
-                        const fileType = asset.type;
-                        const fileExtension = fileType.split('/')[1]; // Get file extension from MIME type
-
-                        // Ensure fileName includes extension
-                        return {
-                            uri: asset.uri,
-                            fileName: `${fileName}`,
-                            type: fileType,
-                        };
-                    });
-
-                    const formData = new FormData();
-
-                    images.forEach((image, index) => {
-                        formData.append('images', {
-                            uri: image.uri,
-                            name: image.fileName, // Ensure fileName includes extension
-                            type: image.type,
-                        });
-                    });
-                    const token = await AsyncStorage.getItem('token');
-                    try {
-                        // Upload images
-
-                        const uploadResponse = await axios.post(
-                            `${API_URL}/api/events/upload-images`,
-                            formData,
-                            {
-                                headers: {
-                                    'Content-Type': 'multipart/form-data',
-                                    Authorization: `Bearer ${token}`,
-                                },
-                            }
-                        );
-                        
-                        if (uploadResponse.status === 200 && uploadResponse.data.files?.length > 0) {
-                            // Extract the URLs of the uploaded images
-                            const uploadedImageUrls = uploadResponse.data.files.map((file) => file.url);
-
-                            Alert.alert('Success', 'Images uploaded successfully');
-
-                            // Update event details with uploaded image URLs
-                            const formattedEventDetails = {
-                                eventId: eventID, // Include the eventId explicitly
-                                images: uploadedImageUrls, // Add the uploaded image URLs
+        try {
+            // Fetch event data to determine the number of uploaded images
+            const eventData = await getEventById(eventID);
+            const no_of_UploadedImages = eventData.images.length;
+    
+            // Check if the limit is exceeded
+            if (no_of_UploadedImages >= 5) {
+                Alert.alert('Sorry!', 'You can only upload 5 images per event.');
+                return; // Exit if limit is exceeded
+            }
+    
+            // Launch the image picker if the limit is not exceeded
+            launchImageLibrary(
+                {
+                    mediaType: 'photo',
+                    quality: 0.5,
+                    selectionLimit: 5 - no_of_UploadedImages, // Allow the remaining number of images
+                },
+                async (response) => {
+                    if (response.didCancel) {
+                        console.log('User cancelled image picker');
+                    } else if (response.errorMessage) {
+                        console.log('ImagePicker Error: ', response.errorMessage);
+                    } else {
+                        const images = response.assets.map((asset) => {
+                            const uniqueIdentifier = Date.now();
+                            const originalFileName = asset.fileName || `image_${uniqueIdentifier}`;
+                            const uniqueFileName = `${uniqueIdentifier}_${originalFileName}`;
+                            const fileType = asset.type;
+    
+                            return {
+                                uri: asset.uri,
+                                fileName: uniqueFileName,
+                                type: fileType,
                             };
-
-                            const updateResponse = await axios.put(
-                                `${API_URL}/api/events/update`,
-                                formattedEventDetails,
+                        });
+    
+                        const formData = new FormData();
+                        images.forEach((image) => {
+                            formData.append('images', {
+                                uri: image.uri,
+                                name: image.fileName,
+                                type: image.type,
+                            });
+                        });
+    
+                        const token = await AsyncStorage.getItem('token');
+                        try {
+                            const uploadResponse = await axios.post(
+                                `${API_URL}/api/events/upload-images`,
+                                formData,
                                 {
                                     headers: {
-                                        'Content-Type': 'application/json',
+                                        'content-Type': 'multipart/form-data',
                                         Authorization: `Bearer ${token}`,
+                                        'cache-control': 'no-cache',
                                     },
+                                    timeout: 10000,
                                 }
-                                
                             );
-                            //console.log("token 2: ",token);
-                            if (updateResponse.status === 200) {
-                                Alert.alert('Success', 'Event updated successfully with images');
-                                // Refresh media tab after successful upload
-                                setRefreshMediaTab((prev) => !prev);
+    
+                            if (uploadResponse.status === 200 && uploadResponse.data.files?.length > 0) {
+                                const uploadedImageUrls = uploadResponse.data.files.map((file) => file.url);
+    
+                                const eventDetailsResponse = await axios.get(
+                                    `${API_URL}/api/events/${eventID}`,
+                                    {
+                                        headers: {
+                                            Authorization: `Bearer ${token}`,
+                                        },
+                                    }
+                                );
+    
+                                let existingImages = [];
+                                if (eventDetailsResponse.status === 200 && eventDetailsResponse.data.images) {
+                                    existingImages = eventDetailsResponse.data.images;
+                                }
+    
+                                const allImages = [...existingImages, ...uploadedImageUrls];
+    
+                                const formattedEventDetails = {
+                                    eventId: eventID,
+                                    images: allImages,
+                                };
+    
+                                const updateResponse = await axios.put(
+                                    `${API_URL}/api/events/update`,
+                                    formattedEventDetails,
+                                    {
+                                        headers: {
+                                            'content-Type': 'application/json',
+                                            Authorization: `Bearer ${token}`,
+                                        },
+                                    }
+                                );
+    
+                                if (updateResponse.status === 200) {
+                                    Alert.alert('Success', 'Event updated successfully with all images');
+                                    setRefreshMediaTab((prev) => !prev);
+                                } else {
+                                    Alert.alert('Error', 'Failed to update the event');
+                                }
                             } else {
-                                Alert.alert('Error', 'Failed to update the event');
+                                Alert.alert('Error', 'Failed to upload the images');
                             }
-                        } else {
-                            Alert.alert('Error', 'Failed to upload the images');
-                        }
-                    } catch (error) {
-                        Alert.alert('Error', 'Something went wrong while uploading images or updating the event');
-                        console.error(error); // Log the error for debugging
-                        const { response } = error;
-                        if (response) {
-                            console.error('Response:', response.data);
+                        } catch (error) {
+                            Alert.alert('Error', 'Something went wrong while uploading images or updating the event');
+                            console.error(error);
+                            if (error.response) {
+                                console.error('Response:', error.response.data);
+                            }
                         }
                     }
                 }
-            }
-        );
-         // Trigger media tab refresh
-         setRefreshMediaTab(prev => !prev);
-
+            );
+        } catch (error) {
+            Alert.alert('Error', 'Something went wrong while fetching event details');
+            console.error(error);
+        }
     };
-
+    
+    
 
 
     return (

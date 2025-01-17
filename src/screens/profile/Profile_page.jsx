@@ -1,316 +1,269 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Modal, Animated,Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import user_image from '../../assets/images/user_image.png';
 import edit_icon from '../../assets/images/edit_icon.png';
 import BackArrowButton from '../../components/BackArrowButton';
-import close_icon from '../../assets/images/close_icon.png';
 import { ProfileDetail } from '../../components/ProfileDetail';
-import ImageCropPicker from 'react-native-image-crop-picker';
-import axios from 'axios';
-import * as ImagePicker from 'react-native-image-picker';
+import ProfileDetailModal from '../../components/ProfileDetailModal';
+import LocationModal from '../../components/LocationModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { getLoggedUser } from '../../api/user';
 import { API_URL } from '../../constants/api';
-//import ImageCropPicker from 'react-native-image-crop-picker';
-
-
+import ImageCropPicker from 'react-native-image-crop-picker';
 
 const Profile_page = ({ navigation }) => {
-    const [user, setUser] = useState({
-        fullname: '',
-        email: '',
-        about: '',
-        location: '',
-        mobile: '',
-        imageUri:'',
+  const [user, setUser] = useState({
+    fullName: '',
+    email: '',
+    about: '',
+    location: '',
+    mobile: '',
+    imageUri: '',
+  });
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModal2Visible, setIsModal2Visible] = useState(false);
+  const [currentDetail, setCurrentDetail] = useState({ property: '', value: '' });
+  const [newValue, setNewValue] = useState('');
+
+  const fetchUser = async () => {
+    try {
+      const userData = await getLoggedUser();
+      setUser({
+        fullName: userData.fullName,
+        email: userData.email,
+        about: userData.about,
+        location: userData.location,
+        mobile: userData.mobile,
+        imageUri: `${userData.profileImage}?t=${new Date().getTime()}`,
       });
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [currentDetail, setCurrentDetail] = useState({ property: '', value: '' });
-    const [newValue, setNewValue] = useState('');
-   
-    
-    
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
-    const fetchUser = async () => {
-        try {
-        setLoading(true);
-        setError(null);
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
-        // Replace `getLoggedUser()` with actual API call
-        const userData = await getLoggedUser();
+  const handleProfileDetailPress = (property, value) => {
+    setCurrentDetail({ property, value });
+    setNewValue(value);
+    if (property==='location')
+        {
+        setIsModal2Visible(true);}
+    else{
+        setIsModalVisible(true);
+    }
+  };
 
-        // Handle successful response
-        setUser(prevUser => ({
-            ...prevUser,  // Preserve existing fields
-            fullname: userData.fullName,
-            about: userData.about,
-            location: userData.location,
-            email: userData.email,
-            mobile: userData.mobile,
-            imageUri: userData.profileImage,
-        }));
-
-        } catch (error) {
-        console.error('Error fetching user:', error);
-        setError('Failed to fetch user data.');
-        } finally {
-        setLoading(false);
-        }
+  const handleSave = async () => {
+    const updatedUser = {
+      ...user,
+      [currentDetail.property]: newValue,
     };
+    setUser(updatedUser);
 
-    useEffect(() => {
-        fetchUser();
-    }, []);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+      await axios.put(
+        `${API_URL}/api/user/profile`,
+        { [currentDetail.property]: newValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log('Profile updated successfully.');
+      console.log('Updating property:', currentDetail.property, 'with value:', newValue);
 
+    } catch (error) {
+      console.error('Error updating profile:', error.response || error.message);
+    }
 
-    const submitProfileDetails = async (fullName, about, location, mobile) => {
-        const formattedProfileDetails = {
-            fullName,
-            about,
-            location,
-            mobile
-        };
-        console.log('Formatted Profile Details:', formattedProfileDetails);
-        try {
-            const token = await AsyncStorage.getItem('token');
-            if (!token) {
-                console.error('No token found');
-                return;
-            }
-    
-            const response = await axios.put(
-                `${API_URL}/api/user/profile`, // Update the endpoint as needed
-                formattedProfileDetails,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                }
-            );
-            console.log('Profile updated:', response.data);
-        } catch (error) {
-            console.error(
-                'Error updating profile:', 
-                error.response ? error.response.data : error.message
-            );
-        }
-    };
-    // Animated value for modal slide
-    const slideAnim = useState(new Animated.Value(0))[0];
+    setIsModalVisible(false);
+  };
 
-    // Open Modal and Set Current Detail
-    const handleProfileDetailPress = (property, value) => {
-        setCurrentDetail({ property, value });
-        setNewValue(value);
-        setIsModalVisible(true);        
-    };
+  useEffect(() => {
+    if (newValue !== '' && currentDetail.property==='location') {
+      handleSave();
+    }
+  }, [newValue]);
 
-    // Save Updated Detail
-    const handleSave = async () => {
-        // Remove password from the update payload
-        const { password, ...updatedUserDetails } = {
-            ...user,
-            [currentDetail.property]: newValue
-        };
-    
-        // Update user state before sending the request
-        setUser(updatedUserDetails);
-    
-        try {
-            await submitProfileDetails(
-                updatedUserDetails.fullname,
-                updatedUserDetails.about,
-                updatedUserDetails.location,
-                updatedUserDetails.mobile,
-                updatedUserDetails.imageUri
-            );
-            console.log('Updated User Details:', updatedUserDetails)
-            console.log('Profile updated successfully');
-        } catch (error) {
-            console.error('Error saving details:', error);
-        }
-    
-        setIsModalVisible(false);
-    };
-    // Trigger slide-up animation when modal is shown
-    useEffect(() => {
-        if (isModalVisible) {
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        } else {
-            Animated.timing(slideAnim, {
-                toValue: 300,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [isModalVisible]);
-
-    // Open Image Gallery and Crop Image
-    const handleEditImage = async () => {
-        ImagePicker.launchImageLibrary(
-            {
-                mediaType: 'photo',
-                quality: 0.5,
-            },
-            async (response) => {
-                if (response.didCancel) {
-                    console.log('User cancelled image picker');
-                } else if (response.errorCode) {
-                    console.log('ImagePicker Error: ', response.errorMessage);
-                } else {
-                    try {
-                        const imageUri = response.assets[0].uri;
-    
-                        // Extract file type from URI
-                        const fileType = imageUri.substring(imageUri.lastIndexOf('.') + 1);
-    
-                        // Confirm before uploading
-                        Alert.alert(
-                            "Update Profile Picture",
-                            "Are you sure you want to update your profile picture?",
-                            [
-                                { text: "Cancel", style: "cancel" },
-                                {
-                                    text: "Yes",
-                                    onPress: async () => {
-                                        const formData = new FormData();
-                                        formData.append('profileImage', {
-                                            uri: imageUri,
-                                            type: `image/${fileType}`,  // Correct file type (e.g., image/jpeg, image/png)
-                                            name: `profileImage.${fileType}`,  // Maintain proper file extension
-                                        });
-    
-                                        const token = await AsyncStorage.getItem('token');
-                                        if (!token) {
-                                            console.error('No token found');
-                                            return;
-                                        }
-    
-                                        // Upload profile image
-                                        const response = await axios.put(
-                                            `${API_URL}/api/user/profile`,
-                                            formData,
-                                            {
-                                                headers: {
-                                                    'Content-Type': 'multipart/form-data',
-                                                    'Authorization': `Bearer ${token}`,
-                                                },
-                                            }
-                                        );
-    
-                                        // Update imageUri in state
-                                        const updatedImageUrl = response.data.user.profileImage;
-                                        setUser(prevState => ({
-                                            ...prevState,
-                                            imageUri: updatedImageUrl,
-                                        }));
-    
-                                        console.log('Profile updated successfully:', response.data);
-                                        Alert.alert("Success", "Profile picture updated successfully!");
-                                    },
-                                },
-                            ]
-                        );
-                    } catch (error) {
-                        console.error('Error uploading profile image:', error.response || error);
-                        Alert.alert("Error", "Failed to update profile picture.");
-                    }
-                }
-            }
-        );
-    };
-    
-    
-    const handleLogout = () => {
-        Alert.alert(
-            'Logout Confirmation',
-            'Do you want to logout from your profile?',
-            [
-                
-                {
-                    text: 'Yes',
-                    onPress: () => navigation.navigate('Login'),
-                },
-                {
-                    text: 'No',
-                    onPress: () => console.log('Logout cancelled'),
-                    style: 'cancel',
-                },
-                
-            ],
-            { cancelable: true }
-        );
-    };
-
-    return (
-        <SafeAreaView style={{ minHeight: '100%', backgroundColor: 'white' }}>
-            <BackArrowButton ReturnPage="UserProfile" />
-            <ScrollView showsVerticalScrollIndicator={false} >
-                
-                {!loading &&
-                <View style={styles.container}>
-                    <Text style={styles.TitleText}>Profile</Text>
-                    <Image 
-                        source={user.imageUri ? { uri: `${user.imageUri}` } : user_image} 
-                        style={styles.circularImg} 
-                        />
-                    <TouchableOpacity onPress={handleEditImage}>
-                        <Image source={edit_icon} resizeMode="contain" style={styles.iconStyle} />
-                    </TouchableOpacity>
-
-                    <Text style={styles.fullnameText}>{user.fullname}</Text>
-                    <Text style={styles.EmailText}>{user.email}</Text>
-                    <ProfileDetail property="Name" value={user.fullname} onPress={() => handleProfileDetailPress('fullname', user.fullname)} />
-                    <ProfileDetail property="About" value={user.about} onPress={() => handleProfileDetailPress('about', user.about)} />
-                    <ProfileDetail property="Location" value={user.location} onPress={() => handleProfileDetailPress('location', user.location)} />
-                    <ProfileDetail property="Phone Number" value={user.mobile} onPress={() => handleProfileDetailPress('mobile', user.mobile)} />
-
-                    <TouchableOpacity style={styles.Logout_Button} onPress={handleLogout}>
-                        <Text style={styles.buttonTextLogout}>LOGOUT</Text>
-                    </TouchableOpacity>
-                </View>}
-
-                {/* Modal for Editing Details */}
-                <Modal
-                    animationType="none"
-                    transparent={true}
-                    visible={isModalVisible}
-                    onRequestClose={() => setIsModalVisible(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <Animated.View
-                            style={[
-                                styles.modalContainer,
-                                { transform: [{ translateY: slideAnim }] }
-                            ]}
-                        >
-                            <TouchableOpacity style={styles.headerContainer} onPress={() => setIsModalVisible(false)}>
-                                <Image source={close_icon} resizeMode="contain" style={styles.closeIconStyle} />
-                            </TouchableOpacity>
-
-                            <TextInput
-                                style={styles.modalInput}
-                                value={newValue}
-                                onChangeText={(text) => setNewValue(text)}
-                                placeholder={`Enter new ${currentDetail.property ? currentDetail.property.toLowerCase() : ''}`}
-                            />
-                            <TouchableOpacity style={styles.Save_Details_Button} onPress={handleSave}>
-                                <Text style={styles.buttonTextLogout}>SAVE DETAILS</Text>
-                            </TouchableOpacity>
-                        </Animated.View>
-                    </View>
-                </Modal>
-            </ScrollView>
-        </SafeAreaView>
-    );
+  const handleSuggestionSelect = (location) => {
+    // Directly update the location in user state
+    setUser(prevState => ({
+        ...prevState,
+        location: location,  // Set the location value from suggestion
+    }));
+    console.log("location: ",location)
+    setCurrentDetail({
+        property: 'location',
+        value: location,  // Update with the new location
+      });
+    setNewValue(location);
+    handleSave();  // Call handleSave after updating state
 };
+
+
+  const handleEditImage = async () => {
+    try {
+        const response = await ImageCropPicker.openPicker({
+            cropping: true, // Enable cropping
+            mediaType: 'photo',
+            compressImageQuality: 0.5, // Compress image
+        });
+
+        if (!response || !response.path) {
+            console.log('No image selected');
+            return;
+        }
+
+        const imageUri = response.path;
+        const fileType = response.mime.split('/')[1]; // Extract file extension from MIME type
+
+        Alert.alert(
+            "Update Profile Picture",
+            "Are you sure you want to update your profile picture?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Yes",
+                    onPress: async () => {
+                        const formData = new FormData();
+                        formData.append('profileImage', {
+                            uri: imageUri,
+                            type: response.mime, // Use MIME type from the library
+                            name: `profileImage.${fileType}`, // Maintain correct file extension
+                        });
+
+                        const token = await AsyncStorage.getItem('token');
+                        if (!token) {
+                            console.error('No token found');
+                            return;
+                        }
+
+                        try {
+                            const uploadResponse = await axios.put(
+                                `${API_URL}/api/user/profile`,
+                                formData,
+                                {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data',
+                                        'Authorization': `Bearer ${token}`,
+                                    },
+                                }
+                            );
+
+                            const updatedImageUrl = uploadResponse.data.user.profileImage;
+                            setUser(prevState => ({
+                                ...prevState,
+                                imageUri: updatedImageUrl,
+                            }));
+                            // Refresh user data
+                            await fetchUser();
+                            console.log('Profile updated successfully:', uploadResponse.data);
+                            Alert.alert("Success", "Profile picture updated successfully!");
+                        } catch (uploadError) {
+                            console.error('Error uploading profile image:', uploadError.response || uploadError);
+                            Alert.alert("Error", "Failed to update profile picture.");
+                        }
+                    },
+                },
+            ]
+        );
+    } catch (error) {
+        console.error('Error picking image:', error.message || error);
+        if (error.code !== 'E_PICKER_CANCELLED') {
+            Alert.alert("Error", "Failed to select or crop the image.");
+        }
+    }
+}
+
+  const handleLogout = () => {
+    Alert.alert('Logout Confirmation', 'Do you want to logout?', [   
+      { text: 'Yes', onPress: () => navigation.navigate('Login') },
+      { text: 'No', style: 'cancel' },
+    ]);
+  };
+
+  
+
+
+
+  return (
+    <SafeAreaView style={{ minHeight: '100%', backgroundColor: 'white' }}>
+      <BackArrowButton ReturnPage="UserProfile" />
+      <ScrollView>
+        <View style={styles.container}>
+          <Text style={styles.TitleText}>Profile</Text>
+          <Image source={user.imageUri && { uri: user.imageUri }} style={styles.circularImg} />
+          <TouchableOpacity onPress={handleEditImage}>
+            <Image source={edit_icon} style={styles.iconStyle} />
+          </TouchableOpacity>
+          <Text style={styles.fullNameText}>{user.fullName}</Text>
+          <Text style={styles.EmailText}>{user.email}</Text>
+
+          {/* Editable Fields */}
+          <ProfileDetail
+            property="Name"
+            value={user.fullName}
+            onPress={() => handleProfileDetailPress('fullName', user.fullName)}
+          />
+          <ProfileDetail
+            property="About"
+            value={user.about}
+            onPress={() => handleProfileDetailPress('about', user.about)}
+          />
+          <ProfileDetail
+            property="Location"
+            value={user.location}
+            onPress={() => handleProfileDetailPress('location', user.location)}
+          />
+          <ProfileDetail
+            property="Phone Number"
+            value={user.mobile}
+            onPress={() => handleProfileDetailPress('mobile', user.mobile)}
+          />
+
+          <TouchableOpacity style={styles.Logout_Button} onPress={handleLogout}>
+            <Text style={styles.buttonTextLogout}>LOGOUT</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Modal for Editing */}
+      <ProfileDetailModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        property={currentDetail.property}
+        value={currentDetail.value}
+        newValue={newValue}
+        setNewValue={setNewValue}
+        onSave={handleSave}
+      />
+      <LocationModal
+                visible={isModal2Visible}
+                onClose={() => setIsModal2Visible(false)}
+                onSelectLocation={handleSuggestionSelect}
+        />
+    </SafeAreaView>
+  );
+};
+
+export default Profile_page;
+
+
 
 const styles = StyleSheet.create({
     container: {
@@ -327,7 +280,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#000',
     },
-    fullnameText: {
+    fullNameText: {
         fontSize: 16,
         fontWeight: '400',
         color: '#000',
@@ -343,7 +296,7 @@ const styles = StyleSheet.create({
         maxHeight: '20%',
     },
     iconStyle: {
-        maxWidth: '60%',
+        maxWidth: '5%',
         maxHeight: '60%',
     },
     closeIconStyle: {
@@ -417,4 +370,3 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Profile_page;

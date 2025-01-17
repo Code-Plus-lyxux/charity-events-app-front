@@ -142,7 +142,7 @@ const Sign_up = ({ navigation }) => {
                         </Pressable>     
                     </View>
 
-                    <View style={{ alignItems: 'flex-start', marginBottom: '35%' ,marginTop:'5%'}}>
+                    <View style={{ alignItems: 'flex-start', marginBottom: '13%' ,marginTop:'3%'}}>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image
                                     source={CheckIcon}

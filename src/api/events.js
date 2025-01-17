@@ -195,3 +195,40 @@ export const getEventsByStatus = async (status) => {
         throw error;
     }
 };
+
+//Delete Event by ID
+
+export const DeleteEventByID = async (event_ID) => {
+    try {
+        console.log(`Attempting to delete event with ID: ${event_ID}`);
+
+        // Retrieve the token from AsyncStorage
+        const token = await AsyncStorage.getItem('token');
+
+        if (!token) {
+            throw new Error('No token found. You are not authorized to perform this action.');
+        }
+
+        // Make the delete API call
+        const response = await axios.delete(`${API_URL}/api/events/delete`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            data: {
+                eventId: event_ID, // Pass the eventId in the body
+            },
+        });
+
+        console.log("Event deleted successfully:", response.data);
+        return response.data; // Return success response if needed
+    } catch (error) {
+        if (error.response) {
+            console.error("Error response:", error.response.data);
+            throw new Error(error.response.data.message || "Failed to delete event");
+        } else {
+            console.error("Network error:", error.message);
+            throw new Error("An error occurred while deleting the event");
+        }
+    }
+};
